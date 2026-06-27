@@ -1,7 +1,9 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:http/http.dart' as http;
 import 'package:adeen/core/database/database_service.dart';
 import 'package:adeen/features/dashboard/data/aladhan_service.dart';
 import 'package:adeen/features/dashboard/domain/prayer_models.dart';
@@ -109,11 +111,13 @@ class LocationState {
 }
 
 final locationProvider = StateNotifierProvider<LocationNotifier, LocationState>((ref) {
-  return LocationNotifier();
+  return LocationNotifier(ref);
 });
 
 class LocationNotifier extends StateNotifier<LocationState> {
-  LocationNotifier()
+  final Ref _ref;
+
+  LocationNotifier(this._ref)
       : super(LocationState(
           latitude: 21.4225, // Default Mecca
           longitude: 39.8262,
@@ -130,6 +134,11 @@ class LocationNotifier extends StateNotifier<LocationState> {
         longitude: cached['longitude']!,
         status: 'loaded',
       );
+      
+      // Attempt to auto-detect language asynchronously if not asked yet
+      if (!DatabaseService.getLanguagePreferenceAsked()) {
+        detectLanguageFromLocation(cached['latitude']!, cached['longitude']!);
+      }
     }
 
     bool serviceEnabled;
@@ -168,6 +177,11 @@ class LocationNotifier extends StateNotifier<LocationState> {
       );
 
       await DatabaseService.saveCachedLocation(position.latitude, position.longitude);
+
+      // Attempt to auto-detect language based on coordinates if not asked yet
+      if (!DatabaseService.getLanguagePreferenceAsked()) {
+        await detectLanguageFromLocation(position.latitude, position.longitude);
+      }
     } catch (e) {
       if (cached == null) {
         state = state.copyWith(status: 'error');
@@ -175,6 +189,69 @@ class LocationNotifier extends StateNotifier<LocationState> {
         state = state.copyWith(status: 'loaded');
       }
     }
+  }
+
+  Future<void> detectLanguageFromLocation(double latitude, double longitude) async {
+    try {
+      final url = Uri.parse(
+          'https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=$latitude&longitude=$longitude&localityLanguage=en');
+      final response = await http.get(url).timeout(const Duration(seconds: 4));
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        final countryCode = data['countryCode'] as String?;
+        if (countryCode != null && countryCode.isNotEmpty) {
+          final detectedLocale = _mapCountryToLocale(countryCode.toUpperCase());
+          _ref.read(localeProvider.notifier).setLocale(detectedLocale);
+        }
+      }
+    } catch (e) {
+      debugPrint("Failed to detect language from location: $e");
+    }
+  }
+
+  String _mapCountryToLocale(String countryCode) {
+    const Map<String, String> countryToLanguage = {
+      'BD': 'bn', // Bengali
+      'IN': 'hi', // Hindi (default for India)
+      'PK': 'ur', // Urdu
+      'ID': 'id', // Indonesian
+      'MY': 'ms', // Malay
+      'SG': 'ms', // Singapore
+      'BN': 'ms', // Brunei
+      'TR': 'tr', // Turkish
+      'FR': 'fr', // French
+      'BE': 'fr', // Belgium
+      'CH': 'fr', // Switzerland
+      'CA': 'fr', // Canada
+      'SN': 'fr', // Senegal
+      'CI': 'fr', // Ivory Coast
+      'CM': 'fr', // Cameroon
+      'MG': 'fr', // Madagascar
+      'NE': 'fr', // Niger
+      'ML': 'fr', // Mali
+      'BF': 'fr', // Burkina Faso
+      'TG': 'fr', // Togo
+      'BJ': 'fr', // Benin
+      'SA': 'ar', // Saudi Arabia
+      'EG': 'ar', // Egypt
+      'AE': 'ar', // UAE
+      'QA': 'ar', // Qatar
+      'KW': 'ar', // Kuwait
+      'OM': 'ar', // Oman
+      'BH': 'ar', // Bahrain
+      'JO': 'ar', // Jordan
+      'LB': 'ar', // Lebanon
+      'SY': 'ar', // Syria
+      'IQ': 'ar', // Iraq
+      'YE': 'ar', // Yemen
+      'MA': 'ar', // Morocco
+      'DZ': 'ar', // Algeria
+      'TN': 'ar', // Tunisia
+      'LY': 'ar', // Libya
+      'SD': 'ar', // Sudan
+      'PS': 'ar', // Palestine
+    };
+    return countryToLanguage[countryCode] ?? 'en';
   }
 }
 
@@ -322,6 +399,7 @@ class CountdownNotifier extends StateNotifier<CountdownVal?> {
 
     final List<MapEntry<String, DateTime>> timingsToday = [
       MapEntry('fajr', today.getPrayerDateTime(today.fajr)),
+      MapEntry('sunrise', today.getPrayerDateTime(today.sunrise)),
       MapEntry('dhuhr', today.getPrayerDateTime(today.dhuhr)),
       MapEntry('asr', today.getPrayerDateTime(today.asr)),
       MapEntry('maghrib', today.getPrayerDateTime(today.maghrib)),

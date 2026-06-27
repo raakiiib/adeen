@@ -6,6 +6,7 @@ import 'core/database/database_service.dart';
 import 'core/localization/app_localizations.dart';
 import 'core/theme/app_theme.dart';
 import 'core/widgets/app_drawer.dart';
+import 'core/widgets/language_setup_dialog.dart';
 import 'features/dashboard/presentation/controllers/prayer_controller.dart';
 import 'features/dashboard/presentation/screens/dashboard_screen.dart';
 import 'features/splash/presentation/screens/splash_screen.dart';
@@ -67,16 +68,31 @@ class MyApp extends ConsumerWidget {
   }
 }
 
-class MainNavigationHub extends StatefulWidget {
+class MainNavigationHub extends ConsumerStatefulWidget {
   const MainNavigationHub({super.key});
 
   @override
-  State<MainNavigationHub> createState() => _MainNavigationHubState();
+  ConsumerState<MainNavigationHub> createState() => _MainNavigationHubState();
 }
 
-class _MainNavigationHubState extends State<MainNavigationHub> {
+class _MainNavigationHubState extends ConsumerState<MainNavigationHub> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   DateTime? _lastPressedAt;
+
+  @override
+  void initState() {
+    super.initState();
+    // After initialization, check and show the language preference selection if not asked yet
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkAndPromptLanguage();
+    });
+  }
+
+  void _checkAndPromptLanguage() {
+    if (!DatabaseService.getLanguagePreferenceAsked()) {
+      LanguageSetupDialog.show(context);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {

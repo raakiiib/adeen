@@ -77,9 +77,9 @@ class PrayerTimes {
   DateTime get sunsetForbiddenStart => getPrayerDateTime(maghrib).subtract(const Duration(minutes: 15));
   DateTime get sunsetForbiddenEnd => getPrayerDateTime(maghrib);
 
-  // Ishraq: sunrise + 15 minutes to sunrise + 45 minutes
+  // Ishraq: sunrise + 15 minutes to zawalForbiddenStart (proper morning window)
   DateTime get ishraqStart => getPrayerDateTime(sunrise).add(const Duration(minutes: 15));
-  DateTime get ishraqEnd => getPrayerDateTime(sunrise).add(const Duration(minutes: 45));
+  DateTime get ishraqEnd => zawalForbiddenStart;
 
   // Tahajjud Start: overall window is Isha to Fajr next day
   DateTime get tahajjudStart => getPrayerDateTime(isha);

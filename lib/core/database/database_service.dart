@@ -36,6 +36,17 @@ class DatabaseService {
     await box.put('locale', code);
   }
 
+  // Settings: Language Preference Asked
+  static bool getLanguagePreferenceAsked() {
+    final box = getBox(settingsBoxName);
+    return box.get('language_preference_asked', defaultValue: false) as bool;
+  }
+
+  static Future<void> saveLanguagePreferenceAsked(bool asked) async {
+    final box = getBox(settingsBoxName);
+    await box.put('language_preference_asked', asked);
+  }
+
   // Settings: Calculation Method
   static int getCalculationMethod() {
     final box = getBox(settingsBoxName);

@@ -1221,6 +1221,7 @@ class DashboardScreen extends ConsumerWidget {
               activeLabel: localizations.translate('tahajjud_active'),
               icon: Icons.nights_stay_outlined,
               theme: theme,
+              onTapHelp: () => _showPrayerInfoDialog(context, 'tahajjud_info_title', 'tahajjud_info_body'),
             ),
             const Divider(height: 24),
             _buildSpecialRow(
@@ -1231,6 +1232,7 @@ class DashboardScreen extends ConsumerWidget {
               activeLabel: localizations.translate('ishraq_active'),
               icon: Icons.wb_twilight_outlined,
               theme: theme,
+              onTapHelp: () => _showPrayerInfoDialog(context, 'ishraq_info_title', 'ishraq_info_body'),
             ),
             const Divider(height: 24),
 
@@ -1269,6 +1271,81 @@ class DashboardScreen extends ConsumerWidget {
     );
   }
 
+  void _showPrayerInfoDialog(BuildContext context, String titleKey, String bodyKey) {
+    final localizations = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          backgroundColor: theme.colorScheme.surface,
+          titlePadding: const EdgeInsets.all(0),
+          contentPadding: const EdgeInsets.only(left: 24, right: 24, top: 16, bottom: 24),
+          title: Container(
+            padding: const EdgeInsets.only(top: 24, left: 24, right: 24, bottom: 8),
+            decoration: const BoxDecoration(
+              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: AppTheme.warmGold.withOpacity(0.12),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.info_outline_rounded,
+                    color: AppTheme.warmGold,
+                    size: 24,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    localizations.translate(titleKey),
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontFamily: 'Playfair Display',
+                      fontWeight: FontWeight.bold,
+                      fontSize: 18,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          content: Text(
+            localizations.translate(bodyKey),
+            style: theme.textTheme.bodyMedium?.copyWith(
+              fontFamily: 'Poppins',
+              fontSize: 13.5,
+              height: 1.5,
+              color: theme.textTheme.bodyMedium?.color?.withOpacity(0.85),
+            ),
+          ),
+          actions: [
+            TextButton(
+              style: TextButton.styleFrom(
+                foregroundColor: AppTheme.warmGold,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              ),
+              onPressed: () => Navigator.pop(context),
+              child: Text(
+                localizations.translate('close'),
+                style: const TextStyle(
+                  fontFamily: 'Poppins',
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   Widget _buildSpecialRow({
     required String title,
     required String subtitle,
@@ -1278,6 +1355,7 @@ class DashboardScreen extends ConsumerWidget {
     required String activeLabel,
     required IconData icon,
     required ThemeData theme,
+    VoidCallback? onTapHelp,
   }) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1337,14 +1415,33 @@ class DashboardScreen extends ConsumerWidget {
                 ),
               ),
               const SizedBox(height: 6),
-              Text(
-                timeRange,
-                style: const TextStyle(
-                  fontFamily: 'Poppins',
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: AppTheme.premiumGold,
-                ),
+              Row(
+                children: [
+                  Text(
+                    timeRange,
+                    style: const TextStyle(
+                      fontFamily: 'Poppins',
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: AppTheme.premiumGold,
+                    ),
+                  ),
+                  if (onTapHelp != null) ...[
+                    const SizedBox(width: 6),
+                    GestureDetector(
+                      onTap: onTapHelp,
+                      behavior: HitTestBehavior.opaque,
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        child: Icon(
+                          Icons.help_outline_rounded,
+                          size: 16,
+                          color: theme.textTheme.bodyMedium?.color?.withOpacity(0.4),
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
               ),
               if (additionalInfo != null) ...[
                 const SizedBox(height: 4),
