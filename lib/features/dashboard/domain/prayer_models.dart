@@ -8,6 +8,7 @@ class PrayerTimes {
   final String isha;
   final String imsak;
   final String method;
+  final String hijriDate;
 
   PrayerTimes({
     required this.date,
@@ -19,6 +20,7 @@ class PrayerTimes {
     required this.isha,
     required this.imsak,
     required this.method,
+    this.hijriDate = '',
   });
 
   Map<String, String> toJson() {
@@ -32,6 +34,7 @@ class PrayerTimes {
       'isha': isha,
       'imsak': imsak,
       'method': method,
+      'hijriDate': hijriDate,
     };
   }
 
@@ -46,6 +49,7 @@ class PrayerTimes {
       isha: json['isha'] as String? ?? '00:00',
       imsak: json['imsak'] as String? ?? '00:00',
       method: json['method'] as String? ?? 'Umm Al-Qura',
+      hijriDate: json['hijriDate'] as String? ?? '',
     );
   }
 
@@ -69,6 +73,24 @@ class PrayerTimes {
   DateTime get sunriseForbiddenStart => getPrayerDateTime(sunrise);
   DateTime get sunriseForbiddenEnd => getPrayerDateTime(sunrise).add(const Duration(minutes: 15));
 
+  // Chasht (Duha) starts 45 minutes after sunrise
+  String get chasht {
+    final dt = getPrayerDateTime(sunrise).add(const Duration(minutes: 45));
+    return '${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
+  }
+
+  // Ishraq starts 15 minutes after sunrise
+  String get ishraq {
+    final dt = getPrayerDateTime(sunrise).add(const Duration(minutes: 15));
+    return '${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
+  }
+
+  // Zawal start time string
+  String get zawalStart {
+    final dt = zawalForbiddenStart;
+    return '${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
+  }
+
   // Midday Forbidden (Zawal): dhuhr - 10 minutes to dhuhr
   DateTime get zawalForbiddenStart => getPrayerDateTime(dhuhr).subtract(const Duration(minutes: 10));
   DateTime get zawalForbiddenEnd => getPrayerDateTime(dhuhr);
@@ -77,9 +99,13 @@ class PrayerTimes {
   DateTime get sunsetForbiddenStart => getPrayerDateTime(maghrib).subtract(const Duration(minutes: 15));
   DateTime get sunsetForbiddenEnd => getPrayerDateTime(maghrib);
 
-  // Ishraq: sunrise + 15 minutes to zawalForbiddenStart (proper morning window)
+  // Ishraq: sunrise + 15 minutes to sunrise + 45 minutes
   DateTime get ishraqStart => getPrayerDateTime(sunrise).add(const Duration(minutes: 15));
-  DateTime get ishraqEnd => zawalForbiddenStart;
+  DateTime get ishraqEnd => getPrayerDateTime(sunrise).add(const Duration(minutes: 45));
+
+  // Chasht (Duha): sunrise + 45 minutes to zawalForbiddenStart
+  DateTime get chashtStart => getPrayerDateTime(sunrise).add(const Duration(minutes: 45));
+  DateTime get chashtEnd => zawalForbiddenStart;
 
   // Tahajjud Start: overall window is Isha to Fajr next day
   DateTime get tahajjudStart => getPrayerDateTime(isha);

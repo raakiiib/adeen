@@ -282,7 +282,7 @@ class QuizResultsScreen extends ConsumerWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                '${localizations.translate('quiz_question_count').toUpperCase()} $index',
+                '${localizations.translate('quiz_question_count').toUpperCase()} ${localizations.localizeDigits(index.toString())}',
                 style: TextStyle(
                   fontFamily: 'Poppins',
                   fontSize: 11,

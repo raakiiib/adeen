@@ -10,6 +10,11 @@ import 'package:adeen/features/profile/presentation/screens/profile_screen.dart'
 import 'package:adeen/features/mosque_map/presentation/screens/mosque_map_screen.dart';
 import 'package:adeen/features/quiz/presentation/screens/quiz_session_screen.dart';
 import 'package:adeen/features/settings/presentation/screens/settings_screen.dart';
+import 'package:adeen/features/dashboard/presentation/screens/prayer_calendar_screen.dart';
+import 'package:adeen/features/dashboard/presentation/screens/today_prayers_screen.dart';
+import 'package:adeen/features/dashboard/presentation/screens/sehri_iftar_calendar_screen.dart';
+import 'package:adeen/features/dashboard/presentation/screens/qibla_screen.dart';
+import 'package:intl/intl.dart';
 
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
@@ -41,23 +46,23 @@ class DashboardScreen extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // 1. Premium Header (Bismillah & Language Switcher)
-                _buildHeader(context, ref, isRtl, localizations),
+                // 1. Premium Header (Gregorian & Hijri Dates)
+                _buildHeader(context, ref, isRtl, localizations, timingsState),
                 const SizedBox(height: 16),
 
                 // Location Status / Method indicator
-                // _buildLocationStatusRow(
-                //   context,
-                //   ref,
-                //   locationState,
-                //   timingsState,
-                //   localizations,
-                // ),
-                // const SizedBox(height: 16),
+                _buildLocationStatusRow(
+                  context,
+                  ref,
+                  locationState,
+                  timingsState,
+                  localizations,
+                ),
+                const SizedBox(height: 8),
 
                 // 2. Main Live Countdown Card
                 _buildCountdownCard(context, ref, localizations),
-                const SizedBox(height: 16),
+                const SizedBox(height: 8),
 
                 // 2b. Fasting Times (Sehri & Iftar) Card
                 _buildFastingTimesCard(
@@ -66,7 +71,7 @@ class DashboardScreen extends ConsumerWidget {
                   timingsState,
                   localizations,
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 8),
 
                 // 2c. Special Times & Forbidden Periods Card
                 _buildSpecialTimesCard(
@@ -75,29 +80,18 @@ class DashboardScreen extends ConsumerWidget {
                   timingsState,
                   localizations,
                 ),
-                const SizedBox(height: 24),
-
-                // 3. Timetable Section
-                _buildSectionHeader(
-                  context,
-                  localizations.translate('app_title').split(' • ')[0],
-                  Icons.schedule,
-                ),
                 const SizedBox(height: 12),
-                _buildPrayerTimetable(
-                  context,
-                  ref,
-                  timingsState,
-                  localizations,
-                ),
-                const SizedBox(height: 24),
 
+                // 3. Timetable Section (Now on top, without section header)
+                _buildCalendarEntryCard(context, localizations, theme),
+
+                // const SizedBox(height: 12),
                 // 4. Spiritual Hub Grid
-                _buildSectionHeader(
-                  context,
-                  localizations.translate('explore_tools'),
-                  Icons.grid_view_rounded,
-                ),
+                // _buildSectionHeader(
+                //   context,
+                //   localizations.translate('explore_tools'),
+                //   Icons.grid_view_rounded,
+                // ),
                 const SizedBox(height: 12),
                 _buildFeaturesGrid(context, ref, localizations, theme),
                 const SizedBox(height: 24),
@@ -114,74 +108,82 @@ class DashboardScreen extends ConsumerWidget {
     WidgetRef ref,
     bool isRtl,
     AppLocalizations localizations,
+    PrayerTimesState timingsState,
   ) {
     final theme = Theme.of(context);
+    final today = timingsState.todayTimings;
+
+    final now = DateTime.now();
+    final String dayName = DateFormat(
+      'EEEE',
+      localizations.locale.languageCode,
+    ).format(now);
+    final String englishDate = localizations.localizeDigits(
+      DateFormat('d MMMM y', localizations.locale.languageCode).format(now),
+    );
+
+    String hijriStr = today?.hijriDate ?? '';
+    if (hijriStr.isEmpty) {
+      hijriStr = _getApproximateHijriDate(now);
+    }
+    hijriStr = localizations.formatHijriDate(hijriStr);
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        IconButton(
-          icon: const Icon(Icons.menu, size: 28),
-          color: theme.brightness == Brightness.dark
-              ? AppTheme.warmGold
-              : theme.colorScheme.primary,
-          onPressed: () {
-            Scaffold.of(context).openDrawer();
-          },
-        ),
-        const SizedBox(width: 8),
-        // Bismillah Calligraphy + Subtitle
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // CustomPaint(
-              //   size: const Size(200, 30),
-              //   painter: BismillahCalligraphyPainter(
-              //     color: Theme.of(context).brightness == Brightness.dark
-              //         ? AppTheme.warmGold
-              //         : Theme.of(context).colorScheme.primary,
-              //   ),
-              // ),
-              // const SizedBox(height: 4),
-              Text(
-                'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ',
-                style: TextStyle(
-                  fontFamily: 'Amiri',
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: Theme.of(context).brightness == Brightness.dark
-                      ? AppTheme.warmGold
-                      : Theme.of(context).colorScheme.primary,
-                ),
-              ),
-            ],
-          ),
-        ),
-        // Settings Icon Button in top right corner
         GestureDetector(
           onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const SettingsScreen()),
-            );
+            Scaffold.of(context).openDrawer();
           },
           child: Container(
-            padding: const EdgeInsets.all(2),
+            padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(color: AppTheme.warmGold, width: 1.5),
-            ),
-            child: CircleAvatar(
-              radius: 20,
-              backgroundColor: theme.colorScheme.primary.withOpacity(0.1),
-              child: Icon(
-                Icons.settings,
-                size: 22,
-                color: theme.colorScheme.primary,
+              color: theme.brightness == Brightness.dark
+                  ? theme.colorScheme.primary.withOpacity(0.12)
+                  : theme.colorScheme.primary.withOpacity(0.04),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: theme.brightness == Brightness.dark
+                    ? AppTheme.warmGold.withOpacity(0.2)
+                    : theme.colorScheme.primary.withOpacity(0.1),
+                width: 1,
               ),
             ),
+            child: Icon(
+              Icons.notes_rounded,
+              size: 22,
+              color: theme.brightness == Brightness.dark
+                  ? AppTheme.warmGold
+                  : theme.colorScheme.primary,
+            ),
           ),
+        ),
+        const Spacer(),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            Text(
+              '$dayName, $englishDate',
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontFamily: 'Playfair Display',
+                fontWeight: FontWeight.bold,
+                fontSize: 17,
+                color: theme.brightness == Brightness.dark
+                    ? Colors.white
+                    : theme.colorScheme.primary,
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              hijriStr,
+              style: const TextStyle(
+                fontFamily: 'Poppins',
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: AppTheme.premiumGold,
+              ),
+            ),
+          ],
         ),
       ],
     );
@@ -204,15 +206,16 @@ class DashboardScreen extends ConsumerWidget {
       locText = localizations.translate('loading');
       icon = Icons.refresh;
     } else if (locationState.status == 'loaded') {
-      locText =
-          '${locationState.latitude.toStringAsFixed(3)}°, ${locationState.longitude.toStringAsFixed(3)}°';
+      locText = localizations.localizeDigits(
+        '${locationState.latitude.toStringAsFixed(3)}°, ${locationState.longitude.toStringAsFixed(3)}°',
+      );
     } else {
       locText = '${localizations.translate('offline_msg')} (Mecca Fallback)';
       icon = Icons.cloud_off;
     }
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
         color: theme.brightness == Brightness.dark
             ? theme.colorScheme.primary.withOpacity(0.15)
@@ -280,236 +283,323 @@ class DashboardScreen extends ConsumerWidget {
     if (countdown == null) {
       return Card(
         child: Container(
-          height: 180,
+          height: 120,
           alignment: Alignment.center,
           child: const CircularProgressIndicator(color: AppTheme.warmGold),
         ),
       );
     }
 
+    final bool isForbidden = countdown.currentPrayerKey.startsWith(
+      'forbidden_',
+    );
+    final Color badgeColor = isForbidden
+        ? theme.colorScheme.error
+        : AppTheme.warmGold;
+
+    final bool isFriday = DateTime.now().weekday == DateTime.friday;
+    String currentKey = countdown.currentPrayerKey;
+    if (isFriday && currentKey == 'dhuhr') currentKey = 'jumah_prayer';
+    String nextKey = countdown.nextPrayerKey;
+    if (isFriday && nextKey == 'dhuhr') nextKey = 'jumah_prayer';
+
     final String currentPrayerLabel = localizations.translate('current_prayer');
     final String currentPrayerName = localizations
-        .translate(countdown.currentPrayerKey)
+        .translate(currentKey)
         .toUpperCase();
     final String nextPrayerLabel = localizations.translate('next_prayer');
     final String nextPrayerName = localizations
-        .translate(countdown.nextPrayerKey)
+        .translate(nextKey)
         .toUpperCase();
     final String leftLabel = localizations.translate('left').toLowerCase();
 
     final int elapsedPercent = (countdown.progress * 100).toInt();
-    final int remainingPercent = 100 - elapsedPercent;
 
-    final String timeElapsedLabel = localizations.translate('time_elapsed');
-    final String remainingLabel = localizations.translate('remaining');
-
-    return Container(
-      height: 220,
-      padding: EdgeInsets.symmetric(vertical: 10, horizontal: 10),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: theme.brightness == Brightness.dark
-              ? [
-                  theme.colorScheme.primary.withOpacity(0.15),
-                  theme.colorScheme.secondary.withOpacity(0.08),
-                ]
-              : [theme.colorScheme.primary, theme.colorScheme.secondary],
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: theme.colorScheme.primary.withOpacity(0.2),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(20),
-        child: Stack(
-          children: [
-            // Architectural Arch background frame drawing
-            Positioned.fill(
-              child: CustomPaint(
-                painter: IslamicArchPainter(
-                  outlineColor: AppTheme.warmGold.withOpacity(0.12),
-                  fillColor: const Color.fromARGB(0, 221, 227, 102),
-                  strokeWidth: 2.0,
+    return Card(
+      shape: isForbidden
+          ? RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+              side: BorderSide(
+                color: theme.colorScheme.error.withOpacity(0.5),
+                width: 1.5,
+              ),
+            )
+          : null,
+      color: isForbidden ? theme.colorScheme.error.withOpacity(0.04) : null,
+      child: InkWell(
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const TodayPrayersScreen()),
+          );
+        },
+        borderRadius: BorderRadius.circular(16),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 14.0),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              // ── Left: Current Prayer ──
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Micro-label
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          width: 6,
+                          height: 6,
+                          decoration: BoxDecoration(
+                            color: badgeColor,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        const SizedBox(width: 5),
+                        Text(
+                          currentPrayerLabel.toUpperCase(),
+                          style: TextStyle(
+                            fontFamily: 'Poppins',
+                            fontSize: 9,
+                            fontWeight: FontWeight.bold,
+                            color: badgeColor.withOpacity(0.75),
+                            letterSpacing: 1.2,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 3),
+                    // Prayer name — large
+                    Text(
+                      currentPrayerName,
+                      style: TextStyle(
+                        fontFamily: 'Playfair Display',
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: isForbidden
+                            ? theme.colorScheme.error
+                            : theme.colorScheme.onSurface,
+                        height: 1.1,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    // Start → End time
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          localizations.localizeDigits(
+                            _formatTo12Hour(
+                              localizations,
+                              '${countdown.currentPrayerStartTime.hour.toString().padLeft(2, '0')}:${countdown.currentPrayerStartTime.minute.toString().padLeft(2, '0')}',
+                            ),
+                          ),
+                          style: TextStyle(
+                            fontFamily: 'Poppins',
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: AppTheme.warmGold,
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 5),
+                          child: Icon(
+                            Icons.arrow_forward_rounded,
+                            size: 11,
+                            color: theme.colorScheme.onSurface.withOpacity(0.3),
+                          ),
+                        ),
+                        Text(
+                          localizations.localizeDigits(
+                            _formatTo12Hour(
+                              localizations,
+                              '${countdown.currentPrayerEndTime.hour.toString().padLeft(2, '0')}:${countdown.currentPrayerEndTime.minute.toString().padLeft(2, '0')}',
+                            ),
+                          ),
+                          style: TextStyle(
+                            fontFamily: 'Poppins',
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: theme.colorScheme.onSurface.withOpacity(0.5),
+                          ),
+                        ),
+                      ],
+                    ),
+                    if (isForbidden) ...[
+                      const SizedBox(height: 6),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.warning_amber_rounded,
+                            size: 12,
+                            color: theme.colorScheme.error,
+                          ),
+                          const SizedBox(width: 4),
+                          Flexible(
+                            child: Text(
+                              localizations.translate('prayer_not_permitted'),
+                              style: TextStyle(
+                                fontFamily: 'Poppins',
+                                fontSize: 10,
+                                fontWeight: FontWeight.w600,
+                                color: theme.colorScheme.error,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ],
                 ),
               ),
-            ),
-            // Crescent Moon Vector
-            PositionedDirectional(
-              end: 16,
-              top: 16,
-              width: 50,
-              height: 50,
-              child: CustomPaint(
-                painter: CrescentMoonPainter(
-                  color: AppTheme.warmGold.withOpacity(0.15),
+
+              // ── Centre: Circular Progress Ring ──
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                child: SizedBox(
+                  width: 96,
+                  height: 96,
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      // Ring track
+                      SizedBox(
+                        width: 96,
+                        height: 96,
+                        child: CircularProgressIndicator(
+                          value: 1.0,
+                          strokeWidth: 7,
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            theme.colorScheme.onSurface.withOpacity(0.07),
+                          ),
+                        ),
+                      ),
+                      // Coloured progress arc (time elapsed)
+                      SizedBox(
+                        width: 96,
+                        height: 96,
+                        child: CircularProgressIndicator(
+                          value: countdown.progress,
+                          strokeWidth: 7,
+                          strokeCap: StrokeCap.round,
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            isForbidden
+                                ? theme.colorScheme.error
+                                : AppTheme.warmGold,
+                          ),
+                        ),
+                      ),
+                      // Inner content: countdown + "left"
+                      Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            localizations.localizeDigits(
+                              countdown.formattedTime,
+                            ),
+                            style: TextStyle(
+                              fontFamily: 'Poppins',
+                              fontSize: 15,
+                              fontWeight: FontWeight.bold,
+                              color: isForbidden
+                                  ? theme.colorScheme.error
+                                  : theme.colorScheme.onSurface,
+                              letterSpacing: 0.3,
+                            ),
+                          ),
+                          Text(
+                            leftLabel,
+                            style: TextStyle(
+                              fontFamily: 'Poppins',
+                              fontSize: 9,
+                              color: theme.colorScheme.onSurface.withOpacity(
+                                0.4,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            '${localizations.localizeDigits(elapsedPercent.toString())}%',
+                            style: TextStyle(
+                              fontFamily: 'Poppins',
+                              fontSize: 10,
+                              fontWeight: FontWeight.w600,
+                              color: isForbidden
+                                  ? theme.colorScheme.error
+                                  : AppTheme.warmGold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
-            // Main text info
-            Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 24.0,
-                vertical: 20.0,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
+
+              // ── Right: Next Prayer ──
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Top Row showing Current active prayer badge and Next prayer
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppTheme.warmGold.withOpacity(0.15),
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(
-                            color: AppTheme.warmGold.withOpacity(0.3),
-                            width: 1,
-                          ),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Container(
-                              width: 6,
-                              height: 6,
-                              decoration: const BoxDecoration(
-                                color: AppTheme.warmGold,
-                                shape: BoxShape.circle,
-                              ),
-                            ),
-                            const SizedBox(width: 6),
-                            Text(
-                              '$currentPrayerLabel: $currentPrayerName',
-                              style: const TextStyle(
-                                fontFamily: 'Poppins',
-                                fontSize: 11,
-                                fontWeight: FontWeight.bold,
-                                color: AppTheme.warmGold,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppTheme.warmGold.withOpacity(0.15),
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(
-                            color: AppTheme.warmGold.withOpacity(0.3),
-                            width: 1,
-                          ),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Container(
-                              width: 6,
-                              height: 6,
-                              decoration: const BoxDecoration(
-                                color: AppTheme.warmGold,
-                                shape: BoxShape.circle,
-                              ),
-                            ),
-                            const SizedBox(width: 6),
-                            Text(
-                              '$nextPrayerLabel: $nextPrayerName',
-                              style: const TextStyle(
-                                fontFamily: 'Poppins',
-                                fontSize: 11,
-                                fontWeight: FontWeight.bold,
-                                color: AppTheme.warmGold,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      // Text(
-                      //   '$nextPrayerLabel: $nextPrayerName',
-                      //   style: TextStyle(
-                      //     fontFamily: 'Poppins',
-                      //     fontSize: 11,
-                      //     fontWeight: FontWeight.w600,
-                      //     color: Colors.white.withOpacity(0.7),
-                      //   ),
-                      // ),
-                    ],
-                  ),
-                  const SizedBox(height: 14),
-
-                  // Prominent countdown showing time remaining for current active window
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.baseline,
-                    textBaseline: TextBaseline.alphabetic,
-                    children: [
-                      Text(
-                        countdown.formattedTime,
-                        style: const TextStyle(
-                          fontFamily: 'Poppins',
-                          fontSize: 38,
-                          fontWeight: FontWeight.w700,
-                          color: AppTheme.premiumGold,
-                          letterSpacing: 1.5,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        leftLabel,
-                        style: TextStyle(
-                          fontFamily: 'Poppins',
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                          color: AppTheme.warmGold.withOpacity(0.7),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-
-                  // Details info label of progress
                   Text(
-                    '$elapsedPercent% $timeElapsedLabel • $remainingPercent% $remainingLabel',
+                    nextPrayerLabel.toUpperCase(),
+                    style: TextStyle(
+                      fontFamily: 'Poppins',
+                      fontSize: 9,
+                      fontWeight: FontWeight.bold,
+                      color: theme.colorScheme.onSurface.withOpacity(0.4),
+                      letterSpacing: 0.8,
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    nextPrayerName,
+                    style: TextStyle(
+                      fontFamily: 'Playfair Display',
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: theme.colorScheme.primary,
+                      height: 1.1,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  // Next prayer start time
+                  Text(
+                    localizations.localizeDigits(
+                      _formatTo12Hour(
+                        localizations,
+                        '${countdown.nextPrayerStartTime.hour.toString().padLeft(2, '0')}:${countdown.nextPrayerStartTime.minute.toString().padLeft(2, '0')}',
+                      ),
+                    ),
+                    style: TextStyle(
+                      fontFamily: 'Poppins',
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: theme.colorScheme.primary.withOpacity(0.85),
+                    ),
+                  ),
+                  // Next prayer end time
+                  Text(
+                    localizations.localizeDigits(
+                      _formatTo12Hour(
+                        localizations,
+                        '${countdown.nextPrayerEndTime.hour.toString().padLeft(2, '0')}:${countdown.nextPrayerEndTime.minute.toString().padLeft(2, '0')}',
+                      ),
+                    ),
                     style: TextStyle(
                       fontFamily: 'Poppins',
                       fontSize: 11,
-                      color: Colors.white.withOpacity(0.65),
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-
-                  // Progress indicator of the active period
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(4),
-                    child: LinearProgressIndicator(
-                      value: countdown.progress,
-                      backgroundColor: Colors.white.withOpacity(0.1),
-                      valueColor: const AlwaysStoppedAnimation<Color>(
-                        AppTheme.warmGold,
-                      ),
-                      minHeight: 6,
+                      color: theme.colorScheme.onSurface.withOpacity(0.4),
                     ),
                   ),
                 ],
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -539,164 +629,80 @@ class DashboardScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildPrayerTimetable(
+  Widget _buildCalendarEntryCard(
     BuildContext context,
-    WidgetRef ref,
-    PrayerTimesState timingsState,
     AppLocalizations localizations,
+    ThemeData theme,
   ) {
-    final theme = Theme.of(context);
-    final today = timingsState.todayTimings;
-    if (today == null) {
-      if (timingsState.isLoading) {
-        return const Center(
-          child: Padding(
-            padding: EdgeInsets.all(24.0),
-            child: CircularProgressIndicator(color: AppTheme.warmGold),
-          ),
-        );
-      }
-      return Center(
-        child: Text(
-          'Error loading timings',
-          style: TextStyle(color: Colors.red.shade400),
-        ),
-      );
-    }
-
-    final list = [
-      _PrayerRowItem('fajr', today.fajr),
-      _PrayerRowItem('sunrise', today.sunrise, isSunrise: true),
-      _PrayerRowItem('dhuhr', today.dhuhr),
-      _PrayerRowItem('asr', today.asr),
-      _PrayerRowItem('maghrib', today.maghrib),
-      _PrayerRowItem('isha', today.isha),
-    ];
-
-    // Find the next active prayer name to highlight it
-    final countdown = ref.watch(countdownProvider);
-    final String activeKey = countdown?.nextPrayerKey ?? '';
-
     return Card(
-      child: ListView.separated(
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        itemCount: list.length,
-        separatorBuilder: (c, i) =>
-            Divider(height: 1, color: theme.dividerColor),
-        itemBuilder: (context, index) {
-          final item = list[index];
-
-          // Map imsak -> sehri / maghrib -> iftar to match countdown key highlights
-          bool isHighlighted = false;
-          if (item.key == 'imsak' && activeKey == 'sehri') {
-            isHighlighted = true;
-          } else if (item.key == 'maghrib' && activeKey == 'iftar') {
-            isHighlighted = true;
-          } else if (item.key == activeKey) {
-            isHighlighted = true;
-          }
-
-          return AnimatedContainer(
-            duration: const Duration(milliseconds: 500),
-            curve: Curves.easeInOut,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            decoration: BoxDecoration(
-              color: isHighlighted
-                  ? (Theme.of(context).brightness == Brightness.dark
-                        ? Theme.of(context).colorScheme.primary.withOpacity(0.3)
-                        : Theme.of(
-                            context,
-                          ).colorScheme.secondary.withOpacity(0.08))
-                  : Colors.transparent,
-              borderRadius: BorderRadius.vertical(
-                top: index == 0 ? const Radius.circular(16) : Radius.zero,
-                bottom: index == list.length - 1
-                    ? const Radius.circular(16)
-                    : Radius.zero,
-              ),
-              border: isHighlighted
-                  ? Border.all(
-                      color: AppTheme.warmGold.withOpacity(0.5),
-                      width: 1.0,
-                    )
-                  : null,
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
-                  children: [
-                    // Dot indicator
-                    Container(
-                      width: 8,
-                      height: 8,
-                      decoration: BoxDecoration(
-                        color: isHighlighted
-                            ? AppTheme.premiumGold
-                            : (item.isSunrise
-                                  ? Colors.grey
-                                  : Theme.of(
-                                      context,
-                                    ).colorScheme.secondary.withOpacity(0.4)),
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    // Prayer Name
-                    Text(
-                      localizations.translate(item.key),
-                      style: TextStyle(
-                        fontFamily: 'Poppins',
-                        fontSize: 15,
-                        fontWeight: isHighlighted
-                            ? FontWeight.bold
-                            : FontWeight.w500,
-                        color: isHighlighted
-                            ? AppTheme.premiumGold
-                            : Theme.of(context).colorScheme.onBackground,
-                      ),
-                    ),
-                    if (item.isSehriOrIftar) ...[
-                      const SizedBox(width: 6),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 6,
-                          vertical: 2,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppTheme.warmGold.withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: Text(
-                          item.key == 'imsak' ? 'SEHRI' : 'IFTAR',
-                          style: const TextStyle(
-                            fontFamily: 'Poppins',
-                            fontSize: 9,
-                            fontWeight: FontWeight.bold,
-                            color: AppTheme.premiumGold,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-                // Prayer Time
-                Text(
-                  _formatTo12Hour(item.time),
-                  style: TextStyle(
-                    fontFamily: 'Poppins',
-                    fontSize: 15,
-                    fontWeight: isHighlighted
-                        ? FontWeight.w700
-                        : FontWeight.w500,
-                    color: isHighlighted ? AppTheme.premiumGold : null,
-                  ),
-                ),
-              ],
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: theme.dividerColor.withOpacity(0.08), width: 1),
+      ),
+      child: InkWell(
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const PrayerCalendarScreen(),
             ),
           );
         },
+        borderRadius: BorderRadius.circular(16),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 14.0),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: theme.brightness == Brightness.dark
+                      ? AppTheme.warmGold.withOpacity(0.12)
+                      : theme.colorScheme.primary.withOpacity(0.06),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.calendar_month_outlined,
+                  color: theme.brightness == Brightness.dark
+                      ? AppTheme.warmGold
+                      : theme.colorScheme.primary,
+                  size: 24,
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      localizations.translate('view_calendar'),
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontFamily: 'Poppins',
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14.5,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      localizations.translate('calendar_subtitle'),
+                      style: TextStyle(
+                        fontFamily: 'Poppins',
+                        fontSize: 11,
+                        color: theme.colorScheme.onSurface.withOpacity(0.55),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(
+                Icons.chevron_right_rounded,
+                color: theme.colorScheme.onSurface.withOpacity(0.45),
+                size: 22,
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -788,46 +794,68 @@ class DashboardScreen extends ConsumerWidget {
             ),
           ],
         ),
-        const SizedBox(height: 8),
-        Row(
-          children: [
-            _buildGridCard(
-              context: context,
-              title: localizations.translate('profile'),
-              subtitle: localizations.translate('hub_profile_sub'),
-              icon: Icons.person_outline,
-              iconColor: Colors.blue.shade400,
-              iconBgColor: Colors.blue.shade400.withOpacity(0.12),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const ProfileScreen(),
-                  ),
-                );
-              },
-              theme: theme,
-            ),
-            const SizedBox(width: 8),
-            _buildGridCard(
-              context: context,
-              title: localizations.translate('settings'),
-              subtitle: localizations.translate('hub_settings_sub'),
-              icon: Icons.settings_outlined,
-              iconColor: Colors.orange.shade400,
-              iconBgColor: Colors.orange.shade400.withOpacity(0.12),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const SettingsScreen(),
-                  ),
-                );
-              },
-              theme: theme,
-            ),
-          ],
-        ),
+        // const SizedBox(height: 8),
+        // Row(
+        //   children: [
+        //     _buildGridCard(
+        //       context: context,
+        //       title: localizations.translate('profile'),
+        //       subtitle: localizations.translate('hub_profile_sub'),
+        //       icon: Icons.person_outline,
+        //       iconColor: Colors.blue.shade400,
+        //       iconBgColor: Colors.blue.shade400.withOpacity(0.12),
+        //       onTap: () {
+        //         Navigator.push(
+        //           context,
+        //           MaterialPageRoute(
+        //             builder: (context) => const ProfileScreen(),
+        //           ),
+        //         );
+        //       },
+        //       theme: theme,
+        //     ),
+        //     const SizedBox(width: 8),
+        //     _buildGridCard(
+        //       context: context,
+        //       title: localizations.translate('settings'),
+        //       subtitle: localizations.translate('hub_settings_sub'),
+        //       icon: Icons.settings_outlined,
+        //       iconColor: Colors.orange.shade400,
+        //       iconBgColor: Colors.orange.shade400.withOpacity(0.12),
+        //       onTap: () {
+        //         Navigator.push(
+        //           context,
+        //           MaterialPageRoute(
+        //             builder: (context) => const SettingsScreen(),
+        //           ),
+        //         );
+        //       },
+        //       theme: theme,
+        //     ),
+        //   ],
+        // ),
+        // const SizedBox(height: 8),
+        // Row(
+        //   children: [
+        //     _buildGridCard(
+        //       context: context,
+        //       title: localizations.translate('qibla_finder'),
+        //       subtitle: localizations.translate('hub_qibla_sub'),
+        //       icon: Icons.explore_outlined,
+        //       iconColor: AppTheme.warmGold,
+        //       iconBgColor: AppTheme.warmGold.withOpacity(0.14),
+        //       onTap: () {
+        //         Navigator.push(
+        //           context,
+        //           MaterialPageRoute(builder: (context) => const QiblaScreen()),
+        //         );
+        //       },
+        //       theme: theme,
+        //     ),
+        //     const SizedBox(width: 8),
+        //     const Expanded(child: SizedBox()),
+        //   ],
+        // ),
       ],
     );
   }
@@ -985,109 +1013,129 @@ class DashboardScreen extends ConsumerWidget {
 
     if (today == null) return const SizedBox.shrink();
 
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: theme.cardTheme.color,
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: theme.dividerColor, width: 1),
+        side: BorderSide(color: theme.dividerColor.withOpacity(0.08), width: 1),
       ),
-      child: Row(
-        children: [
-          // Sehri Column
-          Expanded(
-            child: Column(
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
+      child: InkWell(
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) =>
+                  SehriIftarCalendarScreen(initialHijriDate: today.hijriDate),
+            ),
+          );
+        },
+        borderRadius: BorderRadius.circular(16),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              // Sehri Column
+              Expanded(
+                child: Column(
                   children: [
-                    const Icon(
-                      Icons.wb_twilight_outlined,
-                      size: 18,
-                      color: AppTheme.warmGold,
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(
+                          Icons.wb_twilight_outlined,
+                          size: 18,
+                          color: AppTheme.warmGold,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          localizations.translate('sehri'),
+                          style: TextStyle(
+                            fontFamily: 'Poppins',
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: theme.colorScheme.onSurface.withOpacity(0.7),
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(width: 6),
+                    const SizedBox(height: 8),
                     Text(
-                      localizations.translate('sehri'),
-                      style: TextStyle(
+                      _formatTo12Hour(localizations, today.imsak),
+                      style: const TextStyle(
                         fontFamily: 'Poppins',
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: theme.colorScheme.onSurface.withOpacity(0.7),
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: AppTheme.premiumGold,
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  _formatTo12Hour(today.imsak),
-                  style: const TextStyle(
-                    fontFamily: 'Poppins',
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: AppTheme.premiumGold,
-                  ),
-                ),
-              ],
-            ),
-          ),
+              ),
 
-          // Vertical Divider
-          Container(height: 48, width: 1, color: theme.dividerColor),
+              // Vertical Divider
+              Container(height: 48, width: 1, color: theme.dividerColor),
 
-          // Iftar Column
-          Expanded(
-            child: Column(
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
+              // Iftar Column
+              Expanded(
+                child: Column(
                   children: [
-                    const Icon(
-                      Icons.nights_stay_outlined,
-                      size: 18,
-                      color: AppTheme.warmGold,
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(
+                          Icons.nights_stay_outlined,
+                          size: 18,
+                          color: AppTheme.warmGold,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          localizations.translate('iftar'),
+                          style: TextStyle(
+                            fontFamily: 'Poppins',
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: theme.colorScheme.onSurface.withOpacity(0.7),
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(width: 6),
+                    const SizedBox(height: 8),
                     Text(
-                      localizations.translate('iftar'),
-                      style: TextStyle(
+                      _formatTo12Hour(localizations, today.maghrib),
+                      style: const TextStyle(
                         fontFamily: 'Poppins',
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: theme.colorScheme.onSurface.withOpacity(0.7),
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: AppTheme.premiumGold,
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  _formatTo12Hour(today.maghrib),
-                  style: const TextStyle(
-                    fontFamily: 'Poppins',
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: AppTheme.premiumGold,
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
 
-  String _formatTo12Hour(String time24) {
+  String _formatTo12Hour(AppLocalizations localizations, String time24) {
+    if (time24.isEmpty) return '';
     try {
+      if (time24.contains('(')) {
+        time24 = time24.split('(')[0].trim();
+      }
       final parts = time24.split(':');
+      if (parts.length < 2) return time24;
       final hour = int.parse(parts[0]);
       final minute = int.parse(parts[1]);
       final period = hour >= 12 ? 'PM' : 'AM';
       final hour12 = hour % 12 == 0 ? 12 : hour % 12;
       final minuteStr = minute.toString().padLeft(2, '0');
-      return '$hour12:$minuteStr $period';
+      final formatted = '$hour12:$minuteStr $period';
+      return localizations.localizeDigits(formatted);
     } catch (e) {
-      return time24;
+      return localizations.localizeDigits(time24);
     }
   }
 
@@ -1099,7 +1147,6 @@ class DashboardScreen extends ConsumerWidget {
   ) {
     final theme = Theme.of(context);
     final today = timingsState.todayTimings;
-    final tomorrow = timingsState.tomorrowTimings;
 
     if (today == null) return const SizedBox.shrink();
 
@@ -1110,160 +1157,231 @@ class DashboardScreen extends ConsumerWidget {
     final forbiddenKey = today.getActiveForbiddenPeriodKey(now);
     final isForbidden = forbiddenKey != null;
 
-    // Check if Tahajjud is active (between today's Isha and tomorrow's Fajr / today's Fajr fallback)
-    final tahajjudStart = today.tahajjudStart;
-    final tahajjudEnd = today.getTahajjudEnd(tomorrow);
-    final isTahajjudActive = now.isAfter(tahajjudStart) && now.isBefore(tahajjudEnd);
+    final bool isSunriseActive = forbiddenKey == 'forbidden_sunrise';
+    final bool isZawalActive = forbiddenKey == 'forbidden_zawal';
+    final bool isSunsetActive = forbiddenKey == 'forbidden_sunset';
 
-    // Check if Ishraq is active
-    final ishraqStart = today.ishraqStart;
-    final ishraqEnd = today.ishraqEnd;
-    final isIshraqActive = (now.isAfter(ishraqStart) || now.isAtSameMomentAs(ishraqStart)) &&
-        (now.isBefore(ishraqEnd) || now.isAtSameMomentAs(ishraqEnd));
+    Widget buildForbiddenColumn(
+      String labelKey,
+      DateTime start,
+      DateTime end,
+      bool isActive,
+    ) {
+      final String label = localizations.translate(labelKey).split(' ')[0];
+      return Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+            decoration: isActive
+                ? BoxDecoration(
+                    color: theme.colorScheme.error.withOpacity(0.08),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: theme.colorScheme.error.withOpacity(0.24),
+                      width: 1,
+                    ),
+                  )
+                : null,
+            child: Text(
+              label,
+              style: TextStyle(
+                fontFamily: 'Poppins',
+                fontSize: 11,
+                fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
+                color: isActive
+                    ? theme.colorScheme.error
+                    : theme.colorScheme.onSurface.withOpacity(0.55),
+              ),
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            _formatDateTimeTo12Hour(localizations, start),
+            style: TextStyle(
+              fontFamily: 'Poppins',
+              fontSize: 10,
+              fontWeight: isActive ? FontWeight.bold : FontWeight.w600,
+              color: isActive
+                  ? theme.colorScheme.error
+                  : theme.colorScheme.onSurface.withOpacity(0.7),
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 2),
+          Icon(
+            Icons.arrow_downward_rounded,
+            size: 10,
+            color: isActive
+                ? theme.colorScheme.error.withOpacity(0.6)
+                : theme.colorScheme.onSurface.withOpacity(0.3),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            _formatDateTimeTo12Hour(localizations, end),
+            style: TextStyle(
+              fontFamily: 'Poppins',
+              fontSize: 10,
+              fontWeight: isActive ? FontWeight.bold : FontWeight.w600,
+              color: isActive
+                  ? theme.colorScheme.error
+                  : theme.colorScheme.onSurface.withOpacity(0.7),
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      );
+    }
 
     return Card(
       elevation: 2,
+      shape: isForbidden
+          ? RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+              side: BorderSide(
+                color: theme.colorScheme.error.withOpacity(0.5),
+                width: 1.5,
+              ),
+            )
+          : null,
+      color: isForbidden ? theme.colorScheme.error.withOpacity(0.04) : null,
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 12.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Header Row
+            // Header Row: lock clock + status badge
             Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Icon(
-                  Icons.lock_clock_outlined,
-                  color: AppTheme.warmGold,
-                  size: 22,
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    localizations.translate('special_timings'),
-                    style: theme.textTheme.titleLarge?.copyWith(
-                      fontFamily: 'Playfair Display',
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
+                Row(
+                  children: [
+                    Icon(
+                      isForbidden
+                          ? Icons.warning_amber_rounded
+                          : Icons.info_outline_rounded,
+                      color: isForbidden
+                          ? theme.colorScheme.error
+                          : AppTheme.warmGold,
+                      size: 18,
                     ),
+                    const SizedBox(width: 8),
+                    Text(
+                      localizations.translate('special_timings'),
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        fontFamily: 'Poppins',
+                        fontWeight: FontWeight.w600,
+                        fontSize: 13,
+                        color: isForbidden
+                            ? theme.colorScheme.error.withOpacity(0.8)
+                            : theme.colorScheme.onSurface.withOpacity(0.55),
+                      ),
+                    ),
+                  ],
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 3,
+                  ),
+                  decoration: BoxDecoration(
+                    color: isForbidden
+                        ? theme.colorScheme.error.withOpacity(0.08)
+                        : const Color(0xFF0F9D58).withOpacity(0.08),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: isForbidden
+                          ? theme.colorScheme.error.withOpacity(0.2)
+                          : const Color(0xFF0F9D58).withOpacity(0.2),
+                      width: 1,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 6,
+                        height: 6,
+                        decoration: BoxDecoration(
+                          color: isForbidden
+                              ? theme.colorScheme.error
+                              : const Color(0xFF0F9D58),
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        isForbidden
+                            ? localizations
+                                  .translate('prayer_forbidden')
+                                  .toUpperCase()
+                            : localizations
+                                  .translate('prayer_allowed')
+                                  .toUpperCase(),
+                        style: TextStyle(
+                          fontFamily: 'Poppins',
+                          fontSize: 9,
+                          fontWeight: FontWeight.bold,
+                          color: isForbidden
+                              ? theme.colorScheme.error
+                              : const Color(0xFF0F9D58),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
 
-            // Live Permission Status Badge
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 300),
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            // Horizontal row grouping all forbidden columns
+            Container(
+              padding: const EdgeInsets.symmetric(vertical: 10),
               decoration: BoxDecoration(
-                color: isForbidden
-                    ? theme.colorScheme.error.withOpacity(0.08)
-                    : const Color(0xFF0F9D58).withOpacity(0.08),
+                color: theme.colorScheme.error.withOpacity(0.02),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                  color: isForbidden
-                      ? theme.colorScheme.error.withOpacity(0.3)
-                      : const Color(0xFF0F9D58).withOpacity(0.3),
+                  color: theme.colorScheme.error.withOpacity(0.06),
                   width: 1,
                 ),
               ),
               child: Row(
                 children: [
-                  Icon(
-                    isForbidden
-                        ? Icons.warning_amber_rounded
-                        : Icons.check_circle_outline_rounded,
-                    color: isForbidden ? theme.colorScheme.error : const Color(0xFF0F9D58),
-                    size: 20,
-                  ),
-                  const SizedBox(width: 10),
                   Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          isForbidden
-                              ? localizations.translate('prayer_forbidden')
-                              : localizations.translate('prayer_allowed'),
-                          style: TextStyle(
-                            fontFamily: 'Poppins',
-                            fontSize: 13,
-                            fontWeight: FontWeight.bold,
-                            color: isForbidden ? theme.colorScheme.error : const Color(0xFF0F9D58),
-                          ),
-                        ),
-                        if (isForbidden) ...[
-                          const SizedBox(height: 2),
-                          Text(
-                            localizations.translate(forbiddenKey),
-                            style: TextStyle(
-                              fontFamily: 'Poppins',
-                              fontSize: 11,
-                              color: theme.colorScheme.error.withOpacity(0.8),
-                            ),
-                          ),
-                        ],
-                      ],
+                    child: buildForbiddenColumn(
+                      'forbidden_sunrise',
+                      today.sunriseForbiddenStart,
+                      today.sunriseForbiddenEnd,
+                      isSunriseActive,
+                    ),
+                  ),
+                  Container(
+                    height: 24,
+                    width: 0.5,
+                    color: theme.dividerColor.withOpacity(0.12),
+                  ),
+                  Expanded(
+                    child: buildForbiddenColumn(
+                      'forbidden_zawal',
+                      today.zawalForbiddenStart,
+                      today.zawalForbiddenEnd,
+                      isZawalActive,
+                    ),
+                  ),
+                  Container(
+                    height: 24,
+                    width: 0.5,
+                    color: theme.dividerColor.withOpacity(0.12),
+                  ),
+                  Expanded(
+                    child: buildForbiddenColumn(
+                      'forbidden_sunset',
+                      today.sunsetForbiddenStart,
+                      today.sunsetForbiddenEnd,
+                      isSunsetActive,
                     ),
                   ),
                 ],
               ),
-            ),
-            const SizedBox(height: 20),
-
-            // Section 1: Special Voluntary Prayers (Tahajjud & Ishraq)
-            _buildSpecialRow(
-              title: localizations.translate('tahajjud_prayer'),
-              subtitle: localizations.translate('tahajjud_desc'),
-              timeRange: '${_formatDateTimeTo12Hour(tahajjudStart)} - ${_formatDateTimeTo12Hour(tahajjudEnd)}',
-              additionalInfo: '${localizations.translate('tahajjud_best')}: ${_formatDateTimeTo12Hour(today.getTahajjudBestStart(tomorrow))} - ${_formatDateTimeTo12Hour(tahajjudEnd)}',
-              isActive: isTahajjudActive,
-              activeLabel: localizations.translate('tahajjud_active'),
-              icon: Icons.nights_stay_outlined,
-              theme: theme,
-              onTapHelp: () => _showPrayerInfoDialog(context, 'tahajjud_info_title', 'tahajjud_info_body'),
-            ),
-            const Divider(height: 24),
-            _buildSpecialRow(
-              title: localizations.translate('ishraq_prayer'),
-              subtitle: localizations.translate('ishraq_desc'),
-              timeRange: '${_formatDateTimeTo12Hour(ishraqStart)} - ${_formatDateTimeTo12Hour(ishraqEnd)}',
-              isActive: isIshraqActive,
-              activeLabel: localizations.translate('ishraq_active'),
-              icon: Icons.wb_twilight_outlined,
-              theme: theme,
-              onTapHelp: () => _showPrayerInfoDialog(context, 'ishraq_info_title', 'ishraq_info_body'),
-            ),
-            const Divider(height: 24),
-
-            // Section 2: Forbidden Windows
-            Text(
-              localizations.translate('forbidden_status').toUpperCase(),
-              style: TextStyle(
-                fontFamily: 'Poppins',
-                fontSize: 10,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 1.0,
-                color: theme.textTheme.bodyMedium?.color?.withOpacity(0.6),
-              ),
-            ),
-            const SizedBox(height: 10),
-            _buildForbiddenTimeRow(
-              label: localizations.translate('forbidden_sunrise'),
-              timeRange: '${_formatDateTimeTo12Hour(today.sunriseForbiddenStart)} - ${_formatDateTimeTo12Hour(today.sunriseForbiddenEnd)}',
-              theme: theme,
-            ),
-            const SizedBox(height: 8),
-            _buildForbiddenTimeRow(
-              label: localizations.translate('forbidden_zawal'),
-              timeRange: '${_formatDateTimeTo12Hour(today.zawalForbiddenStart)} - ${_formatDateTimeTo12Hour(today.zawalForbiddenEnd)}',
-              theme: theme,
-            ),
-            const SizedBox(height: 8),
-            _buildForbiddenTimeRow(
-              label: localizations.translate('forbidden_sunset'),
-              timeRange: '${_formatDateTimeTo12Hour(today.sunsetForbiddenStart)} - ${_formatDateTimeTo12Hour(today.sunsetForbiddenEnd)}',
-              theme: theme,
             ),
           ],
         ),
@@ -1271,246 +1389,63 @@ class DashboardScreen extends ConsumerWidget {
     );
   }
 
-  void _showPrayerInfoDialog(BuildContext context, String titleKey, String bodyKey) {
-    final localizations = AppLocalizations.of(context);
-    final theme = Theme.of(context);
-
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          backgroundColor: theme.colorScheme.surface,
-          titlePadding: const EdgeInsets.all(0),
-          contentPadding: const EdgeInsets.only(left: 24, right: 24, top: 16, bottom: 24),
-          title: Container(
-            padding: const EdgeInsets.only(top: 24, left: 24, right: 24, bottom: 8),
-            decoration: const BoxDecoration(
-              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-            ),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: AppTheme.warmGold.withOpacity(0.12),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.info_outline_rounded,
-                    color: AppTheme.warmGold,
-                    size: 24,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    localizations.translate(titleKey),
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontFamily: 'Playfair Display',
-                      fontWeight: FontWeight.bold,
-                      fontSize: 18,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          content: Text(
-            localizations.translate(bodyKey),
-            style: theme.textTheme.bodyMedium?.copyWith(
-              fontFamily: 'Poppins',
-              fontSize: 13.5,
-              height: 1.5,
-              color: theme.textTheme.bodyMedium?.color?.withOpacity(0.85),
-            ),
-          ),
-          actions: [
-            TextButton(
-              style: TextButton.styleFrom(
-                foregroundColor: AppTheme.warmGold,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-              ),
-              onPressed: () => Navigator.pop(context),
-              child: Text(
-                localizations.translate('close'),
-                style: const TextStyle(
-                  fontFamily: 'Poppins',
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  Widget _buildSpecialRow({
-    required String title,
-    required String subtitle,
-    required String timeRange,
-    String? additionalInfo,
-    required bool isActive,
-    required String activeLabel,
-    required IconData icon,
-    required ThemeData theme,
-    VoidCallback? onTapHelp,
-  }) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: AppTheme.warmGold.withOpacity(0.12),
-            shape: BoxShape.circle,
-          ),
-          child: Icon(icon, color: AppTheme.warmGold, size: 20),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      fontFamily: 'Poppins',
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  if (isActive) ...[
-                    const SizedBox(width: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: AppTheme.premiumGold.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(4),
-                        border: Border.all(color: AppTheme.premiumGold.withOpacity(0.5), width: 0.5),
-                      ),
-                      child: Text(
-                        activeLabel.split(' ')[0].toUpperCase(),
-                        style: const TextStyle(
-                          fontFamily: 'Poppins',
-                          fontSize: 8,
-                          fontWeight: FontWeight.bold,
-                          color: AppTheme.premiumGold,
-                        ),
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-              const SizedBox(height: 2),
-              Text(
-                subtitle,
-                style: TextStyle(
-                  fontFamily: 'Poppins',
-                  fontSize: 11,
-                  color: theme.textTheme.bodyMedium?.color?.withOpacity(0.7),
-                ),
-              ),
-              const SizedBox(height: 6),
-              Row(
-                children: [
-                  Text(
-                    timeRange,
-                    style: const TextStyle(
-                      fontFamily: 'Poppins',
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: AppTheme.premiumGold,
-                    ),
-                  ),
-                  if (onTapHelp != null) ...[
-                    const SizedBox(width: 6),
-                    GestureDetector(
-                      onTap: onTapHelp,
-                      behavior: HitTestBehavior.opaque,
-                      child: Container(
-                        padding: const EdgeInsets.all(4),
-                        child: Icon(
-                          Icons.help_outline_rounded,
-                          size: 16,
-                          color: theme.textTheme.bodyMedium?.color?.withOpacity(0.4),
-                        ),
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-              if (additionalInfo != null) ...[
-                const SizedBox(height: 4),
-                Text(
-                  additionalInfo,
-                  style: TextStyle(
-                    fontFamily: 'Poppins',
-                    fontSize: 11,
-                    fontStyle: FontStyle.italic,
-                    color: theme.textTheme.bodyMedium?.color?.withOpacity(0.6),
-                  ),
-                ),
-              ],
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildForbiddenTimeRow({
-    required String label,
-    required String timeRange,
-    required ThemeData theme,
-  }) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          label,
-          style: const TextStyle(
-            fontFamily: 'Poppins',
-            fontSize: 12,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-        Text(
-          timeRange,
-          style: TextStyle(
-            fontFamily: 'Poppins',
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
-            color: theme.colorScheme.error.withOpacity(0.8),
-          ),
-        ),
-      ],
-    );
-  }
-
-  String _formatDateTimeTo12Hour(DateTime dt) {
+  String _formatDateTimeTo12Hour(AppLocalizations localizations, DateTime dt) {
     final hour = dt.hour;
     final minute = dt.minute;
     final period = hour >= 12 ? 'PM' : 'AM';
     final hour12 = hour % 12 == 0 ? 12 : hour % 12;
     final minuteStr = minute.toString().padLeft(2, '0');
-    return '$hour12:$minuteStr $period';
+    return localizations.localizeDigits('$hour12:$minuteStr $period');
   }
-}
 
-class _PrayerRowItem {
-  final String key;
-  final String time;
-  final bool isSehriOrIftar;
-  final bool isSunrise;
+  String _getApproximateHijriDate(DateTime gregorian) {
+    int year = gregorian.year;
+    int month = gregorian.month;
+    int day = gregorian.day;
 
-  _PrayerRowItem(
-    this.key,
-    this.time, {
-    this.isSehriOrIftar = false,
-    this.isSunrise = false,
-  });
+    if (month < 3) {
+      year -= 1;
+      month += 12;
+    }
+
+    int a = (year / 100).floor();
+    int b = (a / 4).floor();
+    int c = 2 - a + b;
+    int e = (365.25 * (year + 4716)).floor();
+    int f = (30.6001 * (month + 1)).floor();
+    double jd = c + day + e + f - 1524.5;
+
+    double imjd = jd - 1948439.5;
+    int cycle = (imjd / 10631).floor();
+    int cycleRem = (imjd % 10631).floor();
+
+    int iYear = (cycleRem / 354.36667).floor();
+    int iYearRem = (cycleRem - (iYear * 354.36667).floor()).floor();
+
+    int iMonth = ((iYearRem + 30) / 29.5).floor();
+    if (iMonth > 12) iMonth = 12;
+    int iDay = iYearRem - ((iMonth - 1) * 29.5).floor() + 1;
+
+    int hijriYear = cycle * 30 + iYear + 1;
+    int hijriMonth = iMonth;
+    int hijriDay = iDay;
+
+    final months = [
+      'Muharram',
+      'Safar',
+      'Rabi\' al-Awwal',
+      'Rabi\' al-Thani',
+      'Jumada al-Awwal',
+      'Jumada al-Thani',
+      'Rajab',
+      'Sha\'ban',
+      'Ramadan',
+      'Shawwal',
+      'Dhu al-Qidah',
+      'Dhu al-Hijjah',
+    ];
+
+    final String mName = months[hijriMonth - 1];
+    return '$hijriDay $mName $hijriYear AH';
+  }
 }

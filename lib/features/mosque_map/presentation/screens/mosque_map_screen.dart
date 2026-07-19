@@ -1095,8 +1095,13 @@ class _MosqueDetailsBottomSheet extends ConsumerWidget {
   }
 
   String _formatTo12Hour(String time24) {
+    if (time24.isEmpty) return '';
     try {
+      if (time24.contains('(')) {
+        time24 = time24.split('(')[0].trim();
+      }
       final parts = time24.split(':');
+      if (parts.length < 2) return time24;
       final hour = int.parse(parts[0]);
       final minute = int.parse(parts[1]);
       final period = hour >= 12 ? 'PM' : 'AM';

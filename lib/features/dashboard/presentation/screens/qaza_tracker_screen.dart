@@ -160,7 +160,7 @@ class QazaTrackerScreen extends ConsumerWidget {
                                         constraints: const BoxConstraints(minWidth: 40),
                                         alignment: Alignment.center,
                                         child: Text(
-                                          '$count',
+                                          localizations.localizeDigits('$count'),
                                           style: TextStyle(
                                             fontFamily: 'Poppins',
                                             fontSize: 18,

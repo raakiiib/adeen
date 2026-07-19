@@ -286,19 +286,35 @@ class PrayerTimesState {
 
 final aladhanServiceProvider = Provider((ref) => AlAdhanService());
 
+// --- School of Thought / Juristic Method Controller ---
+final juristicSchoolProvider = StateNotifierProvider<SchoolNotifier, int>((ref) {
+  return SchoolNotifier();
+});
+
+class SchoolNotifier extends StateNotifier<int> {
+  SchoolNotifier() : super(DatabaseService.getJuristicSchool());
+
+  Future<void> updateSchool(int schoolId) async {
+    state = schoolId;
+    await DatabaseService.saveJuristicSchool(schoolId);
+  }
+}
+
 final prayerTimesProvider = StateNotifierProvider<PrayerTimesNotifier, PrayerTimesState>((ref) {
   final service = ref.watch(aladhanServiceProvider);
   final location = ref.watch(locationProvider);
   final method = ref.watch(calculationMethodProvider);
-  return PrayerTimesNotifier(service, location, method);
+  final school = ref.watch(juristicSchoolProvider);
+  return PrayerTimesNotifier(service, location, method, school);
 });
 
 class PrayerTimesNotifier extends StateNotifier<PrayerTimesState> {
   final AlAdhanService _service;
   final LocationState _location;
   final int _method;
+  final int _school;
 
-  PrayerTimesNotifier(this._service, this._location, this._method) : super(PrayerTimesState(isLoading: true)) {
+  PrayerTimesNotifier(this._service, this._location, this._method, this._school) : super(PrayerTimesState(isLoading: true)) {
     loadTimings();
   }
 
@@ -318,6 +334,7 @@ class PrayerTimesNotifier extends StateNotifier<PrayerTimesState> {
         latitude: _location.latitude,
         longitude: _location.longitude,
         method: _method,
+        school: _school,
       );
 
       final tomorrow = await _service.fetchPrayerTimes(
@@ -325,6 +342,7 @@ class PrayerTimesNotifier extends StateNotifier<PrayerTimesState> {
         latitude: _location.latitude,
         longitude: _location.longitude,
         method: _method,
+        school: _school,
       );
 
       state = PrayerTimesState(
@@ -341,10 +359,14 @@ class PrayerTimesNotifier extends StateNotifier<PrayerTimesState> {
 // --- Live Countdown Controller ---
 class CountdownVal {
   final String currentPrayerKey;
-  final String nextPrayerKey; // Localized key
+  final String nextPrayerKey;
   final Duration remaining;
   final String formattedTime; // HH:MM:SS
   final double progress; // 0.0 to 1.0
+  final DateTime currentPrayerStartTime;
+  final DateTime currentPrayerEndTime;
+  final DateTime nextPrayerStartTime;
+  final DateTime nextPrayerEndTime;
 
   CountdownVal({
     required this.currentPrayerKey,
@@ -352,6 +374,10 @@ class CountdownVal {
     required this.remaining,
     required this.formattedTime,
     required this.progress,
+    required this.currentPrayerStartTime,
+    required this.currentPrayerEndTime,
+    required this.nextPrayerStartTime,
+    required this.nextPrayerEndTime,
   });
 }
 
@@ -364,6 +390,20 @@ final countdownProvider = StateNotifierProvider<CountdownNotifier, CountdownVal?
   final timings = ref.watch(prayerTimingsOnlyProvider);
   return CountdownNotifier(timings.$1, timings.$2);
 });
+
+class _TimeSegment {
+  final String key;
+  final DateTime startTime;
+  final DateTime endTime;
+  final String nextPrayerKey;
+
+  _TimeSegment({
+    required this.key,
+    required this.startTime,
+    required this.endTime,
+    required this.nextPrayerKey,
+  });
+}
 
 class CountdownNotifier extends StateNotifier<CountdownVal?> {
   final PrayerTimes? _today;
@@ -397,56 +437,141 @@ class CountdownNotifier extends StateNotifier<CountdownVal?> {
 
     final now = DateTime.now();
 
-    final List<MapEntry<String, DateTime>> timingsToday = [
-      MapEntry('fajr', today.getPrayerDateTime(today.fajr)),
-      MapEntry('sunrise', today.getPrayerDateTime(today.sunrise)),
-      MapEntry('dhuhr', today.getPrayerDateTime(today.dhuhr)),
-      MapEntry('asr', today.getPrayerDateTime(today.asr)),
-      MapEntry('maghrib', today.getPrayerDateTime(today.maghrib)),
-      MapEntry('isha', today.getPrayerDateTime(today.isha)),
+    final fajrToday = today.getPrayerDateTime(today.fajr);
+    final sunriseToday = today.getPrayerDateTime(today.sunrise);
+    final sunriseForbiddenEndToday = sunriseToday.add(const Duration(minutes: 15));
+    final ishraqEndToday = sunriseToday.add(const Duration(minutes: 45));
+    final zawalForbiddenStartToday = today.getPrayerDateTime(today.dhuhr).subtract(const Duration(minutes: 10));
+    final dhuhrToday = today.getPrayerDateTime(today.dhuhr);
+    final asrToday = today.getPrayerDateTime(today.asr);
+    final sunsetForbiddenStartToday = today.getPrayerDateTime(today.maghrib).subtract(const Duration(minutes: 15));
+    final maghribToday = today.getPrayerDateTime(today.maghrib);
+    final ishaToday = today.getPrayerDateTime(today.isha);
+
+    final fajrTomorrow = tomorrow != null
+        ? tomorrow.getPrayerDateTime(tomorrow.fajr)
+        : fajrToday.add(const Duration(days: 1));
+
+    // Build the chronological 24-hour segments timeline
+    final List<_TimeSegment> segments = [
+      // Yesterday's Isha segment to cover the period before Fajr today
+      _TimeSegment(
+        key: 'isha',
+        startTime: ishaToday.subtract(const Duration(days: 1)),
+        endTime: fajrToday,
+        nextPrayerKey: 'fajr',
+      ),
+      // Fajr
+      _TimeSegment(
+        key: 'fajr',
+        startTime: fajrToday,
+        endTime: sunriseToday,
+        nextPrayerKey: 'ishraq',
+      ),
+      // Sunrise Forbidden Period
+      _TimeSegment(
+        key: 'forbidden_sunrise',
+        startTime: sunriseToday,
+        endTime: sunriseForbiddenEndToday,
+        nextPrayerKey: 'ishraq',
+      ),
+      // Ishraq
+      _TimeSegment(
+        key: 'ishraq',
+        startTime: sunriseForbiddenEndToday,
+        endTime: ishraqEndToday,
+        nextPrayerKey: 'chasht_duha',
+      ),
+      // Chasht (Duha)
+      _TimeSegment(
+        key: 'chasht_duha',
+        startTime: ishraqEndToday,
+        endTime: zawalForbiddenStartToday,
+        nextPrayerKey: 'dhuhr',
+      ),
+      // Zawal Forbidden Period
+      _TimeSegment(
+        key: 'forbidden_zawal',
+        startTime: zawalForbiddenStartToday,
+        endTime: dhuhrToday,
+        nextPrayerKey: 'dhuhr',
+      ),
+      // Dhuhr
+      _TimeSegment(
+        key: 'dhuhr',
+        startTime: dhuhrToday,
+        endTime: asrToday,
+        nextPrayerKey: 'asr',
+      ),
+      // Asr
+      _TimeSegment(
+        key: 'asr',
+        startTime: asrToday,
+        endTime: sunsetForbiddenStartToday,
+        nextPrayerKey: 'maghrib',
+      ),
+      // Sunset Forbidden Period
+      _TimeSegment(
+        key: 'forbidden_sunset',
+        startTime: sunsetForbiddenStartToday,
+        endTime: maghribToday,
+        nextPrayerKey: 'maghrib',
+      ),
+      // Maghrib
+      _TimeSegment(
+        key: 'maghrib',
+        startTime: maghribToday,
+        endTime: ishaToday,
+        nextPrayerKey: 'isha',
+      ),
+      // Isha Today
+      _TimeSegment(
+        key: 'isha',
+        startTime: ishaToday,
+        endTime: fajrTomorrow,
+        nextPrayerKey: 'fajr',
+      ),
     ];
 
-    MapEntry<String, DateTime>? prevEvent;
-    MapEntry<String, DateTime>? nextEvent;
-
-    for (int i = 0; i < timingsToday.length; i++) {
-      if (now.isBefore(timingsToday[i].value)) {
-        nextEvent = timingsToday[i];
-        prevEvent = i > 0 ? timingsToday[i - 1] : null;
+    _TimeSegment? activeSegment;
+    int activeIndex = segments.length - 1;
+    for (int i = 0; i < segments.length; i++) {
+      final seg = segments[i];
+      if ((now.isAfter(seg.startTime) || now.isAtSameMomentAs(seg.startTime)) &&
+          now.isBefore(seg.endTime)) {
+        activeSegment = seg;
+        activeIndex = i;
         break;
       }
     }
+    activeSegment ??= segments.last;
 
-    if (nextEvent == null && tomorrow != null) {
-      prevEvent = timingsToday.last;
-      nextEvent = MapEntry('fajr', tomorrow.getPrayerDateTime(tomorrow.fajr));
-    }
+    // Find next segment for its start/end times
+    final nextIndex = (activeIndex + 1) < segments.length ? activeIndex + 1 : 0;
+    final nextSegment = segments[nextIndex];
 
-    if (nextEvent == null) return;
-
-    final DateTime prevDateTime = prevEvent?.value ?? nextEvent.value.subtract(const Duration(hours: 6));
-    final DateTime nextDateTime = nextEvent.value;
-
-    final remaining = nextDateTime.difference(now);
+    final remaining = activeSegment.endTime.difference(now);
 
     final hours = remaining.inHours.toString().padLeft(2, '0');
     final minutes = (remaining.inMinutes % 60).toString().padLeft(2, '0');
     final seconds = (remaining.inSeconds % 60).toString().padLeft(2, '0');
     final formattedTime = '$hours:$minutes:$seconds';
 
-    final totalInterval = nextDateTime.difference(prevDateTime).inSeconds;
-    final elapsed = now.difference(prevDateTime).inSeconds;
+    final totalInterval = activeSegment.endTime.difference(activeSegment.startTime).inSeconds;
+    final elapsed = now.difference(activeSegment.startTime).inSeconds;
     double progress = totalInterval > 0 ? elapsed / totalInterval : 0.0;
     progress = progress.clamp(0.0, 1.0);
 
-    String currentDisplayKey = prevEvent?.key ?? 'isha';
-
     state = CountdownVal(
-      currentPrayerKey: currentDisplayKey,
-      nextPrayerKey: nextEvent.key,
+      currentPrayerKey: activeSegment.key,
+      nextPrayerKey: activeSegment.nextPrayerKey,
       remaining: remaining,
       formattedTime: formattedTime,
       progress: progress,
+      currentPrayerStartTime: activeSegment.startTime,
+      currentPrayerEndTime: activeSegment.endTime,
+      nextPrayerStartTime: nextSegment.startTime,
+      nextPrayerEndTime: nextSegment.endTime,
     );
   }
 }
@@ -562,4 +687,289 @@ final statisticsProvider = Provider<UserStats>((ref) {
     fastingDaysCount: fastingCount,
     totalQazaBacklog: Map.from(todayLog.qazaCounts),
   );
+});
+
+// --- Prayer Calendar Screen State ---
+class PrayerCalendarState {
+  final String selectedTab; // 'week', 'month', 'date'
+  final DateTime selectedDate;
+  final int selectedMonth;
+  final int selectedYear;
+  final bool isLoading;
+  final List<PrayerTimes> weeklyTimings;
+  final List<PrayerTimes> monthlyTimings;
+  final List<PrayerTimes> dateTimings;
+  final String? errorMessage;
+
+  PrayerCalendarState({
+    required this.selectedTab,
+    required this.selectedDate,
+    required this.selectedMonth,
+    required this.selectedYear,
+    required this.isLoading,
+    required this.weeklyTimings,
+    required this.monthlyTimings,
+    required this.dateTimings,
+    this.errorMessage,
+  });
+
+  PrayerCalendarState copyWith({
+    String? selectedTab,
+    DateTime? selectedDate,
+    int? selectedMonth,
+    int? selectedYear,
+    bool? isLoading,
+    List<PrayerTimes>? weeklyTimings,
+    List<PrayerTimes>? monthlyTimings,
+    List<PrayerTimes>? dateTimings,
+    String? errorMessage,
+  }) {
+    return PrayerCalendarState(
+      selectedTab: selectedTab ?? this.selectedTab,
+      selectedDate: selectedDate ?? this.selectedDate,
+      selectedMonth: selectedMonth ?? this.selectedMonth,
+      selectedYear: selectedYear ?? this.selectedYear,
+      isLoading: isLoading ?? this.isLoading,
+      weeklyTimings: weeklyTimings ?? this.weeklyTimings,
+      monthlyTimings: monthlyTimings ?? this.monthlyTimings,
+      dateTimings: dateTimings ?? this.dateTimings,
+      errorMessage: errorMessage ?? this.errorMessage,
+    );
+  }
+}
+
+class PrayerCalendarNotifier extends StateNotifier<PrayerCalendarState> {
+  final AlAdhanService _service;
+  final LocationState _location;
+  final int _method;
+  final int _school;
+
+  PrayerCalendarNotifier(this._service, this._location, this._method, this._school)
+      : super(PrayerCalendarState(
+          selectedTab: 'week',
+          selectedDate: DateTime.now(),
+          selectedMonth: DateTime.now().month,
+          selectedYear: DateTime.now().year,
+          isLoading: true,
+          weeklyTimings: [],
+          monthlyTimings: [],
+          dateTimings: [],
+        )) {
+    loadTimings();
+  }
+
+  String _formatDate(DateTime dt) {
+    return '${dt.day.toString().padLeft(2, '0')}-${dt.month.toString().padLeft(2, '0')}-${dt.year}';
+  }
+
+  Future<void> loadTimings() async {
+    state = state.copyWith(isLoading: true, errorMessage: null);
+    try {
+      if (state.selectedTab == 'week') {
+        // Fetch 7 days starting from today
+        final List<Future<PrayerTimes>> futures = [];
+        final today = DateTime.now();
+        for (int i = 0; i < 7; i++) {
+          final targetDate = today.add(Duration(days: i));
+          futures.add(
+            _service.fetchPrayerTimes(
+              date: _formatDate(targetDate),
+              latitude: _location.latitude,
+              longitude: _location.longitude,
+              method: _method,
+              school: _school,
+            ),
+          );
+        }
+        final results = await Future.wait(futures);
+        state = state.copyWith(weeklyTimings: results, isLoading: false);
+      } else if (state.selectedTab == 'month') {
+        // Fetch full monthly calendar
+        final results = await _service.fetchMonthlyCalendar(
+          year: state.selectedYear,
+          month: state.selectedMonth,
+          latitude: _location.latitude,
+          longitude: _location.longitude,
+          method: _method,
+          school: _school,
+        );
+        state = state.copyWith(monthlyTimings: results, isLoading: false);
+      } else {
+        // Fetch specific date timing
+        final result = await _service.fetchPrayerTimes(
+          date: _formatDate(state.selectedDate),
+          latitude: _location.latitude,
+          longitude: _location.longitude,
+          method: _method,
+          school: _school,
+        );
+        state = state.copyWith(dateTimings: [result], isLoading: false);
+      }
+    } catch (e) {
+      state = state.copyWith(isLoading: false, errorMessage: e.toString());
+    }
+  }
+
+  Future<void> changeTab(String tab) async {
+    state = state.copyWith(selectedTab: tab);
+    await loadTimings();
+  }
+
+  Future<void> changeDate(DateTime date) async {
+    state = state.copyWith(selectedDate: date);
+    await loadTimings();
+  }
+
+  Future<void> changeMonth(int month, int year) async {
+    state = state.copyWith(selectedMonth: month, selectedYear: year);
+    await loadTimings();
+  }
+
+  void resetState() {
+    state = PrayerCalendarState(
+      selectedTab: 'week',
+      selectedDate: DateTime.now(),
+      selectedMonth: DateTime.now().month,
+      selectedYear: DateTime.now().year,
+      isLoading: true,
+      weeklyTimings: [],
+      monthlyTimings: [],
+      dateTimings: [],
+    );
+    loadTimings();
+  }
+}
+
+final prayerCalendarProvider = StateNotifierProvider<PrayerCalendarNotifier, PrayerCalendarState>((ref) {
+  final service = ref.watch(aladhanServiceProvider);
+  final location = ref.watch(locationProvider);
+  final method = ref.watch(calculationMethodProvider);
+  final school = ref.watch(juristicSchoolProvider);
+  return PrayerCalendarNotifier(service, location, method, school);
+});
+
+// --- Sehri & Iftar Monthly Calendar State & Notifier ---
+class SehriIftarCalendarState {
+  final int selectedMonth; // Hijri month (1 to 12)
+  final int selectedYear;  // Hijri year (e.g. 1447)
+  final bool isLoading;
+  final List<PrayerTimes> timings;
+  final String? errorMessage;
+
+  SehriIftarCalendarState({
+    required this.selectedMonth,
+    required this.selectedYear,
+    required this.isLoading,
+    required this.timings,
+    this.errorMessage,
+  });
+
+  SehriIftarCalendarState copyWith({
+    int? selectedMonth,
+    int? selectedYear,
+    bool? isLoading,
+    List<PrayerTimes>? timings,
+    String? errorMessage,
+  }) {
+    return SehriIftarCalendarState(
+      selectedMonth: selectedMonth ?? this.selectedMonth,
+      selectedYear: selectedYear ?? this.selectedYear,
+      isLoading: isLoading ?? this.isLoading,
+      timings: timings ?? this.timings,
+      errorMessage: errorMessage ?? this.errorMessage,
+    );
+  }
+}
+
+class SehriIftarCalendarNotifier extends StateNotifier<SehriIftarCalendarState> {
+  final AlAdhanService _service;
+  final LocationState _location;
+  final int _method;
+  final int _school;
+
+  SehriIftarCalendarNotifier(
+    this._service,
+    this._location,
+    this._method,
+    this._school,
+    String? initialHijriDate,
+  ) : super(SehriIftarCalendarState(
+          selectedMonth: _parseInitialMonth(initialHijriDate),
+          selectedYear: _parseInitialYear(initialHijriDate),
+          isLoading: true,
+          timings: [],
+        )) {
+    loadTimings();
+  }
+
+  static int _parseInitialMonth(String? hijriStr) {
+    if (hijriStr == null || hijriStr.isEmpty) return 9; // Fallback to Ramadan
+    final parts = hijriStr.split(' ').where((e) => e.isNotEmpty).toList();
+    if (parts.length < 3) return 9;
+    final String monthClean = parts[1]
+        .toLowerCase()
+        .replaceAll('ā', 'a')
+        .replaceAll('ī', 'i')
+        .replaceAll('ū', 'u')
+        .replaceAll('ḍ', 'd')
+        .replaceAll('ḥ', 'h')
+        .replaceAll('ṣ', 's')
+        .replaceAll('ṭ', 't')
+        .replaceAll('z̄', 'z')
+        .replaceAll('ẓ', 'z')
+        .replaceAll(RegExp(r"[^a-z']"), '');
+    if (monthClean.contains('muharram') || monthClean.contains('محرم')) return 1;
+    if (monthClean.contains('safar') || monthClean.contains('صفر')) return 2;
+    if (monthClean.contains('rabi') && (monthClean.contains('awwal') || monthClean.contains('أول') || monthClean.contains(' i') || monthClean.contains('i\u0304'))) return 3;
+    if (monthClean.contains('rabi') && (monthClean.contains('thani') || monthClean.contains('ثاني') || monthClean.contains(' ii') || monthClean.contains('i\u0304i\u0304'))) return 4;
+    if (monthClean.contains('jumada') && (monthClean.contains('awwal') || monthClean.contains('أولى') || monthClean.contains(' i') || monthClean.contains('i\u0304'))) return 5;
+    if (monthClean.contains('jumada') && (monthClean.contains('thani') || monthClean.contains('آخر') || monthClean.contains(' ii') || monthClean.contains('i\u0304i\u0304'))) return 6;
+    if (monthClean.contains('rajab') || monthClean.contains('رجب')) return 7;
+    if (monthClean.contains('shaban') || monthClean.contains('sha\'ban') || monthClean.contains('شعبان') || monthClean.contains('sha\u02bban')) return 8;
+    if (monthClean.contains('ramad') || monthClean.contains('رمضان')) return 9;
+    if (monthClean.contains('shaww') || monthClean.contains('شوال')) return 10;
+    if (monthClean.contains('qidah') || monthClean.contains('qi\'dah') || monthClean.contains('قعدة')) return 11;
+    if (monthClean.contains('hijjah') || monthClean.contains('حجة')) return 12;
+    return 9;
+  }
+
+  static int _parseInitialYear(String? hijriStr) {
+    if (hijriStr == null || hijriStr.isEmpty) return 1447; // Default
+    final parts = hijriStr.split(' ').where((e) => e.isNotEmpty).toList();
+    if (parts.length >= 3) {
+      final y = int.tryParse(parts[2]);
+      if (y != null) return y;
+    }
+    return 1447;
+  }
+
+  Future<void> loadTimings() async {
+    state = state.copyWith(isLoading: true, errorMessage: null);
+    try {
+      final results = await _service.fetchHijriCalendar(
+        hijriYear: state.selectedYear,
+        hijriMonth: state.selectedMonth,
+        latitude: _location.latitude,
+        longitude: _location.longitude,
+        method: _method,
+        school: _school,
+      );
+      state = state.copyWith(timings: results, isLoading: false);
+    } catch (e) {
+      state = state.copyWith(isLoading: false, errorMessage: e.toString());
+    }
+  }
+
+  Future<void> changeMonth(int month, int year) async {
+    state = state.copyWith(selectedMonth: month, selectedYear: year);
+    await loadTimings();
+  }
+}
+
+final sehriIftarCalendarProvider = StateNotifierProvider.family<SehriIftarCalendarNotifier, SehriIftarCalendarState, String?>((ref, initialHijriDate) {
+  final service = ref.watch(aladhanServiceProvider);
+  final location = ref.watch(locationProvider);
+  final method = ref.watch(calculationMethodProvider);
+  final school = ref.watch(juristicSchoolProvider);
+  return SehriIftarCalendarNotifier(service, location, method, school, initialHijriDate);
 });

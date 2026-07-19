@@ -97,6 +97,17 @@ class DatabaseService {
     await box.put('longitude', lng);
   }
 
+  // Settings: Juristic Method / School of Thought (0 = Standard/Shafi'i/Maliki/Hanbali, 1 = Hanafi)
+  static int getJuristicSchool() {
+    final box = getBox(settingsBoxName);
+    return box.get('juristicSchool', defaultValue: 0) as int;
+  }
+
+  static Future<void> saveJuristicSchool(int schoolId) async {
+    final box = getBox(settingsBoxName);
+    await box.put('juristicSchool', schoolId);
+  }
+
   // Quiz: Total Points
   static int getQuizTotalPoints() {
     final box = getBox(settingsBoxName);

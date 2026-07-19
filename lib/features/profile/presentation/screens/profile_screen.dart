@@ -154,7 +154,7 @@ class ProfileScreen extends ConsumerWidget {
                   ),
                   Center(
                     child: Text(
-                      '${(percent * 100).toInt()}%',
+                      localizations.localizeDigits('${(percent * 100).toInt()}%'),
                       style: const TextStyle(
                         fontFamily: 'Poppins',
                         fontWeight: FontWeight.bold,
@@ -182,7 +182,7 @@ class ProfileScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    '$completed ${localizations.translate('of_total')} $maxTotal ${localizations.translate('completed')}',
+                    '${localizations.localizeDigits(completed.toString())} ${localizations.translate('of_total')} ${localizations.localizeDigits(maxTotal.toString())} ${localizations.translate('completed')}',
                     style: theme.textTheme.bodyMedium,
                   ),
                 ],
@@ -234,7 +234,7 @@ class ProfileScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    '$fastsLogged ${localizations.translate('of_total')} 7 ${localizations.translate('days')}',
+                    '${localizations.localizeDigits(fastsLogged.toString())} ${localizations.translate('of_total')} ${localizations.localizeDigits('7')} ${localizations.translate('days')}',
                     style: theme.textTheme.bodyMedium,
                   ),
                 ],
@@ -280,7 +280,7 @@ class ProfileScreen extends ConsumerWidget {
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
-                    '$totalQaza',
+                    localizations.localizeDigits('$totalQaza'),
                     style: TextStyle(
                       fontFamily: 'Poppins',
                       fontWeight: FontWeight.bold,
@@ -306,7 +306,7 @@ class ProfileScreen extends ConsumerWidget {
                         style: const TextStyle(fontFamily: 'Poppins', fontSize: 14),
                       ),
                       Text(
-                        '${entry.value}',
+                        localizations.localizeDigits('${entry.value}'),
                         style: TextStyle(
                           fontFamily: 'Poppins',
                           fontWeight: FontWeight.bold,

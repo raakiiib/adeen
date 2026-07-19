@@ -14,15 +14,11 @@ import 'features/splash/presentation/screens/splash_screen.dart';
 void main() async {
   // Ensure Flutter engine bindings are initialized prior to loading database
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   // Initialize Hive database boxes for local offline caches
   await DatabaseService.init();
 
-  runApp(
-    const ProviderScope(
-      child: MyApp(),
-    ),
-  );
+  runApp(const ProviderScope(child: MyApp()));
 }
 
 class MyApp extends ConsumerWidget {
@@ -38,7 +34,7 @@ class MyApp extends ConsumerWidget {
     return MaterialApp(
       title: 'Adeen',
       debugShowCheckedModeBanner: false,
-      
+
       theme: AppTheme.getTheme(Brightness.light, activePreset),
       darkTheme: AppTheme.getTheme(Brightness.dark, activePreset),
       themeMode: activeThemeMode,
@@ -113,7 +109,8 @@ class _MainNavigationHubState extends ConsumerState<MainNavigationHub> {
         // 2. Double-back detection for exiting
         final now = DateTime.now();
         final backButtonHasNotBeenPressedOrExpired =
-            _lastPressedAt == null || now.difference(_lastPressedAt!) > const Duration(seconds: 2);
+            _lastPressedAt == null ||
+            now.difference(_lastPressedAt!) > const Duration(seconds: 2);
 
         if (backButtonHasNotBeenPressedOrExpired) {
           _lastPressedAt = now;
@@ -121,12 +118,17 @@ class _MainNavigationHubState extends ConsumerState<MainNavigationHub> {
             SnackBar(
               content: Text(
                 localizations.translate('exit_warning'),
-                style: const TextStyle(fontFamily: 'Poppins', color: AppTheme.warmGold),
+                style: const TextStyle(
+                  fontFamily: 'Poppins',
+                  color: AppTheme.warmGold,
+                ),
               ),
               backgroundColor: theme.colorScheme.primary,
               duration: const Duration(seconds: 2),
               behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
             ),
           );
           return;
@@ -137,10 +139,7 @@ class _MainNavigationHubState extends ConsumerState<MainNavigationHub> {
       },
       child: Scaffold(
         key: _scaffoldKey,
-        drawer: AppDrawer(
-          currentTab: 0,
-          onTabSelected: (_) {},
-        ),
+        drawer: AppDrawer(currentTab: 0, onTabSelected: (_) {}),
         body: const DashboardScreen(),
       ),
     );

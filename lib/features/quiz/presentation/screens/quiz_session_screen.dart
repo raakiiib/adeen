@@ -117,7 +117,7 @@ class _QuizSessionScreenState extends ConsumerState<QuizSessionScreen> {
                     const Icon(Icons.stars, size: 16, color: AppTheme.premiumGold),
                     const SizedBox(width: 4),
                     Text(
-                      '${state.totalPoints} ${localizations.translate('quiz_pts')}',
+                      '${localizations.localizeDigits(state.totalPoints.toString())} ${localizations.translate('quiz_pts')}',
                       style: const TextStyle(
                         fontFamily: 'Poppins',
                         fontWeight: FontWeight.bold,
@@ -146,7 +146,7 @@ class _QuizSessionScreenState extends ConsumerState<QuizSessionScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        '${localizations.translate('quiz_question_count')} ${_currentPageIndex + 1} ${localizations.translate('of_total')} ${questions.length}',
+                        '${localizations.translate('quiz_question_count')} ${localizations.localizeDigits((_currentPageIndex + 1).toString())} ${localizations.translate('of_total')} ${localizations.localizeDigits(questions.length.toString())}',
                         style: theme.textTheme.bodyMedium?.copyWith(
                           fontWeight: FontWeight.bold,
                           color: theme.colorScheme.primary,
@@ -531,7 +531,7 @@ class _QuizSessionScreenState extends ConsumerState<QuizSessionScreen> {
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
-                                  '${state.totalPoints} ${localizations.translate('quiz_points')}',
+                                  '${localizations.localizeDigits(state.totalPoints.toString())} ${localizations.translate('quiz_points')}',
                                   style: const TextStyle(
                                     fontFamily: 'Poppins',
                                     fontSize: 24,

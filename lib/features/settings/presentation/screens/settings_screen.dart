@@ -17,6 +17,7 @@ class SettingsScreen extends ConsumerWidget {
     final activePreset = ref.watch(colorPresetProvider);
     final activeLocale = ref.watch(localeProvider);
     final activeMethod = ref.watch(calculationMethodProvider);
+    final activeSchool = ref.watch(juristicSchoolProvider);
     final timingsState = ref.watch(prayerTimesProvider);
 
     return Scaffold(
@@ -53,6 +54,10 @@ class SettingsScreen extends ConsumerWidget {
 
             // 4. Calculation Method Selector
             _buildCalculationMethodCard(context, ref, activeMethod, timingsState, localizations, theme),
+            const SizedBox(height: 16),
+
+            // 5. Juristic Method (School of Thought) Selector
+            _buildJuristicSchoolCard(context, ref, activeSchool, localizations, theme),
           ],
         ),
       ),
@@ -450,6 +455,119 @@ class SettingsScreen extends ConsumerWidget {
                   onChanged: (val) {
                     if (val != null) {
                       ref.read(calculationMethodProvider.notifier).updateMethod(val);
+                      Navigator.pop(context);
+                    }
+                  },
+                );
+              }).toList(),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(
+                localizations.translate('cancel'),
+                style: const TextStyle(color: AppTheme.warmGold),
+              ),
+            )
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildJuristicSchoolCard(
+    BuildContext context,
+    WidgetRef ref,
+    int activeSchool,
+    AppLocalizations localizations,
+    ThemeData theme,
+  ) {
+    final schools = {
+      0: localizations.translate('school_standard'),
+      1: localizations.translate('school_hanafi'),
+    };
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.gavel_outlined, size: 20, color: AppTheme.warmGold),
+                const SizedBox(width: 8),
+                Text(
+                  localizations.translate('juristic_method'),
+                  style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            GestureDetector(
+              onTap: () => _showJuristicSchoolDialog(context, ref, activeSchool, schools, localizations, theme),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.grey.withOpacity(0.2)),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        schools[activeSchool] ?? schools[0]!,
+                        style: const TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w500),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    const Icon(Icons.arrow_drop_down, color: AppTheme.warmGold),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showJuristicSchoolDialog(
+    BuildContext context,
+    WidgetRef ref,
+    int activeSchool,
+    Map<int, String> schools,
+    AppLocalizations localizations,
+    ThemeData theme,
+  ) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: Theme.of(context).cardTheme.color,
+          title: Text(
+            localizations.translate('juristic_method'),
+            style: const TextStyle(fontFamily: 'Playfair Display', fontWeight: FontWeight.bold),
+          ),
+          content: SizedBox(
+            width: double.maxFinite,
+            child: ListView(
+              shrinkWrap: true,
+              children: schools.entries.map((entry) {
+                return RadioListTile<int>(
+                  title: Text(
+                    entry.value,
+                    style: const TextStyle(fontFamily: 'Poppins', fontSize: 14),
+                  ),
+                  value: entry.key,
+                  groupValue: activeSchool,
+                  activeColor: AppTheme.warmGold,
+                  onChanged: (val) {
+                    if (val != null) {
+                      ref.read(juristicSchoolProvider.notifier).updateSchool(val);
+                      ref.read(prayerTimesProvider.notifier).loadTimings(); // Trigger reload
                       Navigator.pop(context);
                     }
                   },
