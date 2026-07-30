@@ -107,8 +107,11 @@ class PrayerTimes {
   DateTime get chashtStart => getPrayerDateTime(sunrise).add(const Duration(minutes: 45));
   DateTime get chashtEnd => zawalForbiddenStart;
 
-  // Tahajjud Start: overall window is Isha to Fajr next day
-  DateTime get tahajjudStart => getPrayerDateTime(isha);
+  // Tahajjud Start: calculated from midnight of the next calendar day (00:00)
+  DateTime get tahajjudStart {
+    final baseDate = getPrayerDateTime('00:00');
+    return baseDate.add(const Duration(days: 1));
+  }
   
   // Tahajjud End: Fajr of next day (requires passing tomorrow's Fajr, or we can approximate)
   DateTime getTahajjudEnd(PrayerTimes? tomorrow) {

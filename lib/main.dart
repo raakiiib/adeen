@@ -1,7 +1,9 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'core/analytics/analytics_service.dart';
 import 'core/database/database_service.dart';
 import 'core/localization/app_localizations.dart';
 import 'core/theme/app_theme.dart';
@@ -14,6 +16,9 @@ import 'features/splash/presentation/screens/splash_screen.dart';
 void main() async {
   // Ensure Flutter engine bindings are initialized prior to loading database
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize Firebase
+  await Firebase.initializeApp();
 
   // Initialize Hive database boxes for local offline caches
   await DatabaseService.init();
@@ -60,6 +65,9 @@ class MyApp extends ConsumerWidget {
       ],
 
       home: const SplashScreen(),
+      navigatorObservers: [
+        AnalyticsService.instance.observer,
+      ],
     );
   }
 }
@@ -118,12 +126,13 @@ class _MainNavigationHubState extends ConsumerState<MainNavigationHub> {
             SnackBar(
               content: Text(
                 localizations.translate('exit_warning'),
-                style: const TextStyle(
+                style: TextStyle(
                   fontFamily: 'Poppins',
-                  color: AppTheme.warmGold,
+                  color: theme.colorScheme.surface,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
-              backgroundColor: theme.colorScheme.primary,
+              backgroundColor: theme.colorScheme.onSurface,
               duration: const Duration(seconds: 2),
               behavior: SnackBarBehavior.floating,
               shape: RoundedRectangleBorder(

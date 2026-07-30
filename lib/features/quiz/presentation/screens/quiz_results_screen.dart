@@ -19,8 +19,8 @@ class QuizResultsScreen extends ConsumerWidget {
     if (state.isLoading) {
       return Scaffold(
         backgroundColor: theme.scaffoldBackgroundColor,
-        body: const Center(
-          child: CircularProgressIndicator(color: AppTheme.warmGold),
+        body: Center(
+          child: CircularProgressIndicator(color: Theme.of(context).colorScheme.tertiary),
         ),
       );
     }
@@ -32,15 +32,15 @@ class QuizResultsScreen extends ConsumerWidget {
       appBar: AppBar(
         title: Text(
           localizations.translate('tafsir_review'),
-          style: const TextStyle(
-            fontFamily: 'Playfair Display',
+          style: TextStyle(
+            
             fontWeight: FontWeight.bold,
           ),
         ),
         automaticallyImplyLeading: false, // Force them to use home/done button
         actions: [
           IconButton(
-            icon: const Icon(Icons.close),
+            icon: Icon(Icons.close),
             onPressed: () => Navigator.pop(context),
           ),
         ],
@@ -91,7 +91,7 @@ class QuizResultsScreen extends ConsumerWidget {
               child: ElevatedButton(
                 onPressed: () => Navigator.pop(context),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: theme.colorScheme.primary,
+                  backgroundColor: Theme.of(context).colorScheme.primary,
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -102,7 +102,7 @@ class QuizResultsScreen extends ConsumerWidget {
                 child: Text(
                   localizations.translate('back_to_home'),
                   style: TextStyle(
-                    fontFamily: 'Poppins',
+                    
                     fontWeight: FontWeight.bold,
                     fontSize: 15,
                     color: isDark ? Colors.black : Colors.white,
@@ -124,24 +124,24 @@ class QuizResultsScreen extends ConsumerWidget {
     final localizations = AppLocalizations.of(context);
     if (state.isSyncing) {
       return Container(
-        color: AppTheme.warmGold.withOpacity(0.12),
+        color: Theme.of(context).colorScheme.tertiary.withOpacity(0.12),
         padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const SizedBox(
+            SizedBox(
               width: 14,
               height: 14,
               child: CircularProgressIndicator(
                 strokeWidth: 2,
-                color: AppTheme.premiumGold,
+                color: Theme.of(context).colorScheme.tertiary,
               ),
             ),
             const SizedBox(width: 10),
             Text(
               localizations.translate('quiz_syncing'),
               style: TextStyle(
-                fontFamily: 'Poppins',
+                
                 fontSize: 11,
                 fontWeight: FontWeight.w600,
                 color: theme.colorScheme.onBackground.withOpacity(0.8),
@@ -159,7 +159,7 @@ class QuizResultsScreen extends ConsumerWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(
+            Icon(
               Icons.check_circle_outline,
               size: 16,
               color: Colors.green,
@@ -167,8 +167,8 @@ class QuizResultsScreen extends ConsumerWidget {
             const SizedBox(width: 8),
             Text(
               localizations.translate('quiz_synced'),
-              style: const TextStyle(
-                fontFamily: 'Poppins',
+              style: TextStyle(
+                
                 fontSize: 11,
                 fontWeight: FontWeight.bold,
                 color: Colors.green,
@@ -186,13 +186,13 @@ class QuizResultsScreen extends ConsumerWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.cloud_off, size: 16, color: Colors.amber),
+            Icon(Icons.cloud_off, size: 16, color: Colors.amber),
             const SizedBox(width: 8),
             Expanded(
               child: Text(
                 localizations.translate(state.syncError!),
-                style: const TextStyle(
-                  fontFamily: 'Poppins',
+                style: TextStyle(
+                  
                   fontSize: 11,
                   fontWeight: FontWeight.w500,
                   color: Colors.brown,
@@ -284,10 +284,10 @@ class QuizResultsScreen extends ConsumerWidget {
               Text(
                 '${localizations.translate('quiz_question_count').toUpperCase()} ${localizations.localizeDigits(index.toString())}',
                 style: TextStyle(
-                  fontFamily: 'Poppins',
+                  
                   fontSize: 11,
                   fontWeight: FontWeight.bold,
-                  color: theme.colorScheme.primary,
+                  color: Theme.of(context).colorScheme.primary,
                   letterSpacing: 1.1,
                 ),
               ),
@@ -317,7 +317,7 @@ class QuizResultsScreen extends ConsumerWidget {
                           ? localizations.translate('quiz_correct')
                           : localizations.translate('quiz_incorrect'),
                       style: TextStyle(
-                        fontFamily: 'Poppins',
+                        
                         fontSize: 9,
                         fontWeight: FontWeight.bold,
                         color: isCorrect ? Colors.green : Colors.orange,
@@ -334,7 +334,7 @@ class QuizResultsScreen extends ConsumerWidget {
           Text(
             displayQ.question,
             style: theme.textTheme.titleMedium?.copyWith(
-              fontFamily: 'Playfair Display',
+              
               fontSize: 16,
               fontWeight: FontWeight.bold,
             ),
@@ -358,7 +358,7 @@ class QuizResultsScreen extends ConsumerWidget {
                   ? const Color(0xFF0F2D1D)
                   : const Color(0xFFE8F5E9);
               borderColor = Colors.green.shade400;
-              suffixIcon = const Icon(
+              suffixIcon = Icon(
                 Icons.check_circle,
                 color: Colors.green,
                 size: 16,
@@ -425,7 +425,7 @@ class QuizResultsScreen extends ConsumerWidget {
                   children: [
                     Container(
                       width: 4,
-                      color: AppTheme.warmGold,
+                      color: Theme.of(context).colorScheme.tertiary,
                     ),
                     Expanded(
                       child: Padding(
@@ -435,19 +435,19 @@ class QuizResultsScreen extends ConsumerWidget {
                           children: [
                             Row(
                               children: [
-                                const Icon(
+                                Icon(
                                   Icons.menu_book,
                                   size: 14,
-                                  color: AppTheme.warmGold,
+                                  color: Theme.of(context).colorScheme.tertiary,
                                 ),
                                 const SizedBox(width: 6),
                                 Text(
                                   localizations.translate('quiz_tafsir_insight'),
-                                  style: const TextStyle(
-                                    fontFamily: 'Playfair Display',
+                                  style: TextStyle(
+                                    
                                     fontSize: 12,
                                     fontWeight: FontWeight.bold,
-                                    color: AppTheme.premiumGold,
+                                    color: Theme.of(context).colorScheme.tertiary,
                                   ),
                                 ),
                               ],
@@ -455,9 +455,9 @@ class QuizResultsScreen extends ConsumerWidget {
                             const SizedBox(height: 8),
                             Text(
                               tafsirToDisplay,
-                              style: (theme.textTheme.bodyLarge ?? const TextStyle())
+                              style: (theme.textTheme.bodyLarge ?? TextStyle())
                                   .copyWith(
-                                    fontFamily: 'Poppins',
+                                    
                                     fontSize: 13,
                                     fontStyle: localizations.locale.languageCode == 'en'
                                         ? FontStyle.italic

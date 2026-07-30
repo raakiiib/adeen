@@ -60,7 +60,9 @@ class _PrayerCalendarScreenState extends ConsumerState<PrayerCalendarScreen> wit
       if (parts.length < 2) return localizations.localizeDigits(time24);
       final int hour = int.parse(parts[0]);
       final int minute = int.parse(parts[1]);
-      final period = hour >= 12 ? 'PM' : 'AM';
+      final period = hour >= 12
+          ? localizations.translate('pm')
+          : localizations.translate('am');
       final hour12 = hour % 12 == 0 ? 12 : hour % 12;
       final minuteStr = minute.toString().padLeft(2, '0');
       final formatted = '$hour12:$minuteStr $period';
@@ -79,15 +81,15 @@ class _PrayerCalendarScreenState extends ConsumerState<PrayerCalendarScreen> wit
           backgroundColor: Theme.of(context).cardTheme.color,
           title: Text(
             localizations.translate(titleKey),
-            style: const TextStyle(
-              fontFamily: 'Playfair Display',
+            style: TextStyle(
+              
               fontWeight: FontWeight.bold,
             ),
           ),
           content: Text(
             localizations.translate(bodyKey),
-            style: const TextStyle(
-              fontFamily: 'Poppins',
+            style: TextStyle(
+              
               fontSize: 14,
               height: 1.5,
             ),
@@ -97,7 +99,7 @@ class _PrayerCalendarScreenState extends ConsumerState<PrayerCalendarScreen> wit
               onPressed: () => Navigator.pop(context),
               child: Text(
                 localizations.translate('cancel'),
-                style: const TextStyle(color: AppTheme.warmGold),
+                style: TextStyle(color: Theme.of(context).colorScheme.tertiary),
               ),
             ),
           ],
@@ -117,15 +119,16 @@ class _PrayerCalendarScreenState extends ConsumerState<PrayerCalendarScreen> wit
         title: Text(
           localizations.translate('view_calendar'),
           style: theme.textTheme.titleMedium?.copyWith(
-            fontFamily: 'Playfair Display',
+            
             fontWeight: FontWeight.bold,
             fontSize: 18,
           ),
         ),
         bottom: TabBar(
           controller: _tabController,
-          indicatorColor: AppTheme.warmGold,
-          labelColor: theme.brightness == Brightness.dark ? AppTheme.warmGold : theme.colorScheme.primary,
+          indicatorColor: Theme.of(context).colorScheme.tertiary,
+          dividerColor: Colors.transparent,
+          labelColor: theme.brightness == Brightness.dark ? Theme.of(context).colorScheme.tertiary : Theme.of(context).colorScheme.primary,
           unselectedLabelColor: theme.colorScheme.onSurface.withOpacity(0.55),
           tabs: [
             Tab(text: localizations.translate('tab_week')),
@@ -135,8 +138,8 @@ class _PrayerCalendarScreenState extends ConsumerState<PrayerCalendarScreen> wit
         ),
       ),
       body: calendarState.isLoading
-          ? const Center(
-              child: CircularProgressIndicator(color: AppTheme.warmGold),
+          ? Center(
+              child: CircularProgressIndicator(color: Theme.of(context).colorScheme.tertiary),
             )
           : calendarState.errorMessage != null
               ? Center(
@@ -207,7 +210,7 @@ class _PrayerCalendarScreenState extends ConsumerState<PrayerCalendarScreen> wit
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               IconButton(
-                icon: const Icon(Icons.chevron_left_rounded),
+                icon: Icon(Icons.chevron_left_rounded),
                 onPressed: () {
                   final state = ref.read(prayerCalendarProvider);
                   int newMonth = state.selectedMonth - 1;
@@ -221,14 +224,14 @@ class _PrayerCalendarScreenState extends ConsumerState<PrayerCalendarScreen> wit
               ),
               Text(
                 _formatMonthYear(context, ref.watch(prayerCalendarProvider).selectedMonth, ref.watch(prayerCalendarProvider).selectedYear),
-                style: const TextStyle(
-                  fontFamily: 'Playfair Display',
+                style: TextStyle(
+                  
                   fontWeight: FontWeight.bold,
                   fontSize: 16,
                 ),
               ),
               IconButton(
-                icon: const Icon(Icons.chevron_right_rounded),
+                icon: Icon(Icons.chevron_right_rounded),
                 onPressed: () {
                   final state = ref.read(prayerCalendarProvider);
                   int newMonth = state.selectedMonth + 1;
@@ -259,13 +262,13 @@ class _PrayerCalendarScreenState extends ConsumerState<PrayerCalendarScreen> wit
                 margin: const EdgeInsets.only(bottom: 8.0),
                 color: isToday
                     ? (theme.brightness == Brightness.dark
-                        ? theme.colorScheme.primary.withOpacity(0.12)
-                        : theme.colorScheme.primary.withOpacity(0.04))
+                        ? Theme.of(context).colorScheme.primary.withOpacity(0.12)
+                        : Theme.of(context).colorScheme.primary.withOpacity(0.04))
                     : theme.cardTheme.color,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                   side: BorderSide(
-                    color: isToday ? AppTheme.warmGold : theme.dividerColor.withOpacity(0.06),
+                    color: isToday ? Theme.of(context).colorScheme.tertiary : theme.dividerColor.withOpacity(0.06),
                     width: isToday ? 1.2 : 1.0,
                   ),
                 ),
@@ -277,7 +280,7 @@ class _PrayerCalendarScreenState extends ConsumerState<PrayerCalendarScreen> wit
                       Text(
                         dateFormatted,
                         style: TextStyle(
-                          fontFamily: 'Poppins',
+                          
                           fontSize: 14,
                           fontWeight: isToday ? FontWeight.bold : FontWeight.w600,
                         ),
@@ -287,12 +290,12 @@ class _PrayerCalendarScreenState extends ConsumerState<PrayerCalendarScreen> wit
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                           decoration: BoxDecoration(
-                            color: AppTheme.premiumGold,
+                            color: Theme.of(context).colorScheme.tertiary,
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(
                             localizations.translate('state_active').toUpperCase(),
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 8,
                               fontWeight: FontWeight.bold,
                               color: Colors.white,
@@ -305,7 +308,7 @@ class _PrayerCalendarScreenState extends ConsumerState<PrayerCalendarScreen> wit
                   subtitle: Text(
                     timing.hijriDate.isNotEmpty ? localizations.formatHijriDate(timing.hijriDate) : dayName,
                     style: TextStyle(
-                      fontFamily: 'Poppins',
+                      
                       fontSize: 11,
                       color: theme.colorScheme.onSurface.withOpacity(0.55),
                     ),
@@ -316,11 +319,11 @@ class _PrayerCalendarScreenState extends ConsumerState<PrayerCalendarScreen> wit
                       Text(
                         localizations.translate('tap_view_details'),
                         style: TextStyle(
-                          fontFamily: 'Poppins',
+                          
                           fontSize: 10,
                           color: theme.brightness == Brightness.dark
-                              ? AppTheme.warmGold.withOpacity(0.7)
-                              : theme.colorScheme.primary.withOpacity(0.7),
+                              ? Theme.of(context).colorScheme.tertiary.withOpacity(0.7)
+                              : Theme.of(context).colorScheme.primary.withOpacity(0.7),
                         ),
                       ),
                       const SizedBox(width: 4),
@@ -374,7 +377,7 @@ class _PrayerCalendarScreenState extends ConsumerState<PrayerCalendarScreen> wit
                   return Theme(
                     data: theme.copyWith(
                       colorScheme: theme.colorScheme.copyWith(
-                        primary: AppTheme.warmGold,
+                        primary: Theme.of(context).colorScheme.tertiary,
                         onPrimary: Colors.white,
                       ),
                     ),
@@ -395,15 +398,15 @@ class _PrayerCalendarScreenState extends ConsumerState<PrayerCalendarScreen> wit
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
                       color: theme.brightness == Brightness.dark
-                          ? AppTheme.warmGold.withOpacity(0.12)
-                          : theme.colorScheme.primary.withOpacity(0.06),
+                          ? Theme.of(context).colorScheme.tertiary.withOpacity(0.12)
+                          : Theme.of(context).colorScheme.primary.withOpacity(0.06),
                       shape: BoxShape.circle,
                     ),
                     child: Icon(
                       Icons.calendar_today_rounded,
                       color: theme.brightness == Brightness.dark
-                          ? AppTheme.warmGold
-                          : theme.colorScheme.primary,
+                          ? Theme.of(context).colorScheme.tertiary
+                          : Theme.of(context).colorScheme.primary,
                       size: 20,
                     ),
                   ),
@@ -415,7 +418,7 @@ class _PrayerCalendarScreenState extends ConsumerState<PrayerCalendarScreen> wit
                         Text(
                           localizations.translate('tab_date'),
                           style: TextStyle(
-                            fontFamily: 'Poppins',
+                            
                             fontSize: 11,
                             color: theme.colorScheme.onSurface.withOpacity(0.55),
                           ),
@@ -424,7 +427,7 @@ class _PrayerCalendarScreenState extends ConsumerState<PrayerCalendarScreen> wit
                         Text(
                           localizations.localizeDigits(DateFormat('d MMMM yyyy', localizations.locale.languageCode).format(state.selectedDate)),
                           style: theme.textTheme.titleMedium?.copyWith(
-                            fontFamily: 'Poppins',
+                            
                             fontWeight: FontWeight.bold,
                             fontSize: 14,
                           ),
@@ -435,12 +438,12 @@ class _PrayerCalendarScreenState extends ConsumerState<PrayerCalendarScreen> wit
                   Text(
                     localizations.translate('change'),
                     style: TextStyle(
-                      fontFamily: 'Poppins',
+                      
                       fontSize: 12,
                       fontWeight: FontWeight.bold,
                       color: theme.brightness == Brightness.dark
-                          ? AppTheme.warmGold
-                          : theme.colorScheme.primary,
+                          ? Theme.of(context).colorScheme.tertiary
+                          : Theme.of(context).colorScheme.primary,
                     ),
                   ),
                   const SizedBox(width: 4),
@@ -463,8 +466,8 @@ class _PrayerCalendarScreenState extends ConsumerState<PrayerCalendarScreen> wit
               children: [
                 Text(
                   dateStr,
-                  style: const TextStyle(
-                    fontFamily: 'Playfair Display',
+                  style: TextStyle(
+                    
                     fontWeight: FontWeight.bold,
                     fontSize: 16,
                   ),
@@ -474,7 +477,7 @@ class _PrayerCalendarScreenState extends ConsumerState<PrayerCalendarScreen> wit
                   Text(
                     localizations.formatHijriDate(timing.hijriDate),
                     style: TextStyle(
-                      fontFamily: 'Poppins',
+                      
                       fontSize: 12,
                       color: theme.colorScheme.onSurface.withOpacity(0.55),
                     ),
@@ -548,8 +551,8 @@ class _PrayerCalendarScreenState extends ConsumerState<PrayerCalendarScreen> wit
                       children: [
                         Text(
                           dateStr,
-                          style: const TextStyle(
-                            fontFamily: 'Playfair Display',
+                          style: TextStyle(
+                            
                             fontWeight: FontWeight.bold,
                             fontSize: 16,
                           ),
@@ -559,7 +562,7 @@ class _PrayerCalendarScreenState extends ConsumerState<PrayerCalendarScreen> wit
                           Text(
                            localizations.formatHijriDate(timing.hijriDate),
                             style: TextStyle(
-                              fontFamily: 'Poppins',
+                              
                               fontSize: 12,
                               color: theme.colorScheme.onSurface.withOpacity(0.55),
                             ),
@@ -569,7 +572,7 @@ class _PrayerCalendarScreenState extends ConsumerState<PrayerCalendarScreen> wit
                     ),
                   ),
                   IconButton(
-                    icon: const Icon(Icons.close_rounded),
+                    icon: Icon(Icons.close_rounded),
                     onPressed: () => Navigator.pop(context),
                   ),
                 ],
@@ -667,13 +670,13 @@ class _WeeklyDayCardState extends State<_WeeklyDayCard> with SingleTickerProvide
       margin: const EdgeInsets.only(bottom: 12.0),
       color: widget.isToday
           ? (widget.theme.brightness == Brightness.dark
-              ? widget.theme.colorScheme.primary.withOpacity(0.12)
-              : widget.theme.colorScheme.primary.withOpacity(0.04))
+              ? Theme.of(context).colorScheme.primary.withOpacity(0.12)
+              : Theme.of(context).colorScheme.primary.withOpacity(0.04))
           : widget.theme.cardTheme.color,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
         side: BorderSide(
-          color: widget.isToday ? AppTheme.warmGold : widget.theme.dividerColor.withOpacity(0.06),
+          color: widget.isToday ? Theme.of(context).colorScheme.tertiary : widget.theme.dividerColor.withOpacity(0.06),
           width: widget.isToday ? 1.5 : 1.0,
         ),
       ),
@@ -691,11 +694,11 @@ class _WeeklyDayCardState extends State<_WeeklyDayCard> with SingleTickerProvide
               Text(
                 widget.isToday ? widget.localizations.translate('today') : dayName,
                 style: TextStyle(
-                  fontFamily: 'Poppins',
+                  
                   fontSize: 15,
                   fontWeight: FontWeight.bold,
                   color: widget.isToday
-                      ? AppTheme.premiumGold
+                      ? Theme.of(context).colorScheme.tertiary
                       : widget.theme.colorScheme.onSurface,
                 ),
               ),
@@ -704,12 +707,12 @@ class _WeeklyDayCardState extends State<_WeeklyDayCard> with SingleTickerProvide
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                   decoration: BoxDecoration(
-                    color: AppTheme.premiumGold,
+                    color: Theme.of(context).colorScheme.tertiary,
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
                     widget.localizations.translate('state_active').toUpperCase(),
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 8,
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
@@ -725,7 +728,7 @@ class _WeeklyDayCardState extends State<_WeeklyDayCard> with SingleTickerProvide
               Text(
                 dateFormatted,
                 style: TextStyle(
-                  fontFamily: 'Poppins',
+                  
                   fontSize: 11,
                   color: widget.theme.colorScheme.onSurface.withOpacity(0.6),
                 ),
@@ -735,7 +738,7 @@ class _WeeklyDayCardState extends State<_WeeklyDayCard> with SingleTickerProvide
                 Text(
                   widget.localizations.formatHijriDate(widget.timing.hijriDate),
                   style: TextStyle(
-                    fontFamily: 'Poppins',
+                    
                     fontSize: 11,
                     color: widget.theme.colorScheme.onSurface.withOpacity(0.4),
                   ),
@@ -748,7 +751,7 @@ class _WeeklyDayCardState extends State<_WeeklyDayCard> with SingleTickerProvide
             duration: const Duration(milliseconds: 200),
             child: Icon(
               Icons.expand_more_rounded,
-              color: widget.isToday ? AppTheme.premiumGold : widget.theme.colorScheme.onSurface.withOpacity(0.5),
+              color: widget.isToday ? Theme.of(context).colorScheme.tertiary : widget.theme.colorScheme.onSurface.withOpacity(0.5),
             ),
           ),
           children: [
@@ -872,9 +875,9 @@ class _DailyTimetableList extends ConsumerWidget {
         }
 
         final Color textColor = isCurrent
-            ? AppTheme.premiumGold
+            ? Theme.of(context).colorScheme.tertiary
             : (isUpcoming
-                ? theme.colorScheme.primary
+                ? Theme.of(context).colorScheme.primary
                 : theme.colorScheme.onSurface);
 
         final FontWeight textWeight = (isCurrent || isUpcoming) ? FontWeight.bold : FontWeight.w500;
@@ -885,19 +888,19 @@ class _DailyTimetableList extends ConsumerWidget {
           decoration: BoxDecoration(
             color: isCurrent
                 ? (theme.brightness == Brightness.dark
-                    ? theme.colorScheme.primary.withOpacity(0.18)
-                    : theme.colorScheme.primary.withOpacity(0.04))
+                    ? Theme.of(context).colorScheme.primary.withOpacity(0.18)
+                    : Theme.of(context).colorScheme.primary.withOpacity(0.04))
                 : (isUpcoming
                     ? (theme.brightness == Brightness.dark
-                        ? theme.colorScheme.primary.withOpacity(0.10)
-                        : theme.colorScheme.primary.withOpacity(0.02))
+                        ? Theme.of(context).colorScheme.primary.withOpacity(0.10)
+                        : Theme.of(context).colorScheme.primary.withOpacity(0.02))
                     : theme.cardTheme.color ?? theme.colorScheme.surface),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
               color: isCurrent
-                  ? AppTheme.warmGold
+                  ? Theme.of(context).colorScheme.tertiary
                   : (isUpcoming
-                      ? theme.colorScheme.primary.withOpacity(0.3)
+                      ? Theme.of(context).colorScheme.primary.withOpacity(0.3)
                       : theme.dividerColor.withOpacity(0.04)),
               width: isCurrent ? 1.2 : (isUpcoming ? 1.0 : 0.8),
             ),
@@ -911,16 +914,16 @@ class _DailyTimetableList extends ConsumerWidget {
                     getPrayerIcon(item.key),
                     size: 18,
                     color: isCurrent
-                        ? AppTheme.premiumGold
+                        ? Theme.of(context).colorScheme.tertiary
                         : (isUpcoming
-                            ? theme.colorScheme.primary
+                            ? Theme.of(context).colorScheme.primary
                             : theme.colorScheme.onSurface.withOpacity(0.55)),
                   ),
                   const SizedBox(width: 10),
                   Text(
                     localizations.translate((isFriday && item.key == 'dhuhr') ? 'jumah_prayer' : item.key),
                     style: TextStyle(
-                      fontFamily: 'Poppins',
+                      
                       fontSize: 13,
                       fontWeight: textWeight,
                       color: textColor,
@@ -931,12 +934,12 @@ class _DailyTimetableList extends ConsumerWidget {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
                       decoration: BoxDecoration(
-                        color: isCurrent ? AppTheme.premiumGold : theme.colorScheme.primary,
+                        color: isCurrent ? Theme.of(context).colorScheme.tertiary : Theme.of(context).colorScheme.primary,
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
                         localizations.translate(isCurrent ? 'state_active' : 'state_upcoming').toUpperCase(),
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 7,
                           fontWeight: FontWeight.bold,
                           color: Colors.white,
@@ -960,7 +963,7 @@ class _DailyTimetableList extends ConsumerWidget {
                         Icons.help_outline_rounded,
                         size: 14,
                         color: isCurrent
-                            ? AppTheme.premiumGold.withOpacity(0.7)
+                            ? Theme.of(context).colorScheme.tertiary.withOpacity(0.7)
                             : theme.colorScheme.onSurface.withOpacity(0.35),
                       ),
                     ),
@@ -972,7 +975,7 @@ class _DailyTimetableList extends ConsumerWidget {
                   Text(
                     format12Hour(item.startTime),
                     style: TextStyle(
-                      fontFamily: 'Poppins',
+                      
                       fontSize: 12,
                       fontWeight: textWeight,
                       color: textColor,
@@ -984,17 +987,17 @@ class _DailyTimetableList extends ConsumerWidget {
                       Icons.arrow_forward_rounded,
                       size: 10,
                       color: isCurrent
-                          ? AppTheme.warmGold
+                          ? Theme.of(context).colorScheme.tertiary
                           : theme.colorScheme.onSurface.withOpacity(0.25),
                     ),
                   ),
                   Text(
                     format12Hour(item.endTime),
                     style: TextStyle(
-                      fontFamily: 'Poppins',
+                      
                       fontSize: 11,
                       color: isCurrent
-                          ? AppTheme.premiumGold.withOpacity(0.8)
+                          ? Theme.of(context).colorScheme.tertiary.withOpacity(0.8)
                           : theme.colorScheme.onSurface.withOpacity(0.55),
                     ),
                   ),

@@ -33,8 +33,8 @@ class _QuizSessionScreenState extends ConsumerState<QuizSessionScreen> {
     if (state.isLoading) {
       return Scaffold(
         backgroundColor: theme.scaffoldBackgroundColor,
-        body: const Center(
-          child: CircularProgressIndicator(color: AppTheme.warmGold),
+        body: Center(
+          child: CircularProgressIndicator(color: Theme.of(context).colorScheme.tertiary),
         ),
       );
     }
@@ -50,10 +50,10 @@ class _QuizSessionScreenState extends ConsumerState<QuizSessionScreen> {
         appBar: AppBar(
           title: Text(
             localizations.translate('quiz'),
-            style: const TextStyle(fontFamily: 'Playfair Display'),
+            style: TextStyle(),
           ),
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back),
+            icon: Icon(Icons.arrow_back),
             onPressed: () => Navigator.pop(context),
           ),
         ),
@@ -63,11 +63,11 @@ class _QuizSessionScreenState extends ConsumerState<QuizSessionScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.info_outline, size: 64, color: AppTheme.warmGold),
+                Icon(Icons.info_outline, size: 64, color: Theme.of(context).colorScheme.tertiary),
                 const SizedBox(height: 16),
                 Text(
                   localizations.translate('no_questions_available'),
-                  style: theme.textTheme.titleLarge?.copyWith(fontFamily: 'Playfair Display'),
+                  style: theme.textTheme.titleLarge?.copyWith(),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 8),
@@ -91,13 +91,13 @@ class _QuizSessionScreenState extends ConsumerState<QuizSessionScreen> {
       appBar: AppBar(
         title: Text(
           localizations.translate('quiz'),
-          style: const TextStyle(
-            fontFamily: 'Playfair Display',
+          style: TextStyle(
+            
             fontWeight: FontWeight.bold,
           ),
         ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
+          icon: Icon(Icons.arrow_back),
           onPressed: () => Navigator.pop(context),
         ),
         actions: [
@@ -107,22 +107,22 @@ class _QuizSessionScreenState extends ConsumerState<QuizSessionScreen> {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: AppTheme.warmGold.withOpacity(0.15),
+                  color: Theme.of(context).colorScheme.tertiary.withOpacity(0.15),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppTheme.warmGold.withOpacity(0.3)),
+                  border: Border.all(color: Theme.of(context).colorScheme.tertiary.withOpacity(0.3)),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.stars, size: 16, color: AppTheme.premiumGold),
+                    Icon(Icons.stars, size: 16, color: Theme.of(context).colorScheme.tertiary),
                     const SizedBox(width: 4),
                     Text(
                       '${localizations.localizeDigits(state.totalPoints.toString())} ${localizations.translate('quiz_pts')}',
-                      style: const TextStyle(
-                        fontFamily: 'Poppins',
+                      style: TextStyle(
+                        
                         fontWeight: FontWeight.bold,
                         fontSize: 12,
-                        color: AppTheme.premiumGold,
+                        color: Theme.of(context).colorScheme.tertiary,
                       ),
                     ),
                   ],
@@ -149,16 +149,16 @@ class _QuizSessionScreenState extends ConsumerState<QuizSessionScreen> {
                         '${localizations.translate('quiz_question_count')} ${localizations.localizeDigits((_currentPageIndex + 1).toString())} ${localizations.translate('of_total')} ${localizations.localizeDigits(questions.length.toString())}',
                         style: theme.textTheme.bodyMedium?.copyWith(
                           fontWeight: FontWeight.bold,
-                          color: theme.colorScheme.primary,
+                          color: Theme.of(context).colorScheme.primary,
                         ),
                       ),
                       Text(
                         '${currentQuestion.points} ${localizations.translate('quiz_points')}',
-                        style: const TextStyle(
-                          fontFamily: 'Poppins',
+                        style: TextStyle(
+                          
                           fontSize: 12,
                           fontWeight: FontWeight.bold,
-                          color: AppTheme.warmGold,
+                          color: Theme.of(context).colorScheme.tertiary,
                         ),
                       ),
                     ],
@@ -171,7 +171,7 @@ class _QuizSessionScreenState extends ConsumerState<QuizSessionScreen> {
                       backgroundColor: theme.brightness == Brightness.dark
                           ? theme.colorScheme.surface
                           : Colors.grey.shade200,
-                      valueColor: AlwaysStoppedAnimation<Color>(theme.colorScheme.primary),
+                      valueColor: AlwaysStoppedAnimation<Color>(Theme.of(context).colorScheme.primary),
                       minHeight: 8,
                     ),
                   ),
@@ -219,7 +219,7 @@ class _QuizSessionScreenState extends ConsumerState<QuizSessionScreen> {
                               Positioned.fill(
                                 child: CustomPaint(
                                   painter: IslamicArchPainter(
-                                    outlineColor: AppTheme.warmGold.withOpacity(0.06),
+                                    outlineColor: Theme.of(context).colorScheme.tertiary.withOpacity(0.06),
                                     fillColor: Colors.transparent,
                                     strokeWidth: 1.5,
                                   ),
@@ -232,16 +232,16 @@ class _QuizSessionScreenState extends ConsumerState<QuizSessionScreen> {
                                     Container(
                                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                                       decoration: BoxDecoration(
-                                        color: theme.colorScheme.primary.withOpacity(0.08),
+                                        color: Theme.of(context).colorScheme.primary.withOpacity(0.08),
                                         borderRadius: BorderRadius.circular(20),
                                       ),
                                       child: Text(
                                         q.category.toUpperCase(),
                                         style: TextStyle(
-                                          fontFamily: 'Poppins',
+                                          
                                           fontSize: 10,
                                           fontWeight: FontWeight.bold,
-                                          color: theme.colorScheme.primary,
+                                          color: Theme.of(context).colorScheme.primary,
                                           letterSpacing: 1.2,
                                         ),
                                       ),
@@ -250,7 +250,7 @@ class _QuizSessionScreenState extends ConsumerState<QuizSessionScreen> {
                                     Text(
                                       q.question,
                                       style: theme.textTheme.titleMedium?.copyWith(
-                                        fontFamily: 'Playfair Display',
+                                        
                                         fontSize: 18,
                                         fontWeight: FontWeight.bold,
                                         height: 1.4,
@@ -283,12 +283,12 @@ class _QuizSessionScreenState extends ConsumerState<QuizSessionScreen> {
                                 padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
                                 decoration: BoxDecoration(
                                   color: isSelectedOpt
-                                      ? theme.colorScheme.primary.withOpacity(isDark ? 0.15 : 0.08)
+                                      ? Theme.of(context).colorScheme.primary.withOpacity(isDark ? 0.15 : 0.08)
                                       : theme.cardTheme.color,
                                   borderRadius: BorderRadius.circular(16),
                                   border: Border.all(
                                     color: isSelectedOpt
-                                        ? theme.colorScheme.primary
+                                        ? Theme.of(context).colorScheme.primary
                                         : theme.dividerColor,
                                     width: isSelectedOpt ? 2 : 1,
                                   ),
@@ -301,11 +301,11 @@ class _QuizSessionScreenState extends ConsumerState<QuizSessionScreen> {
                                       decoration: BoxDecoration(
                                         shape: BoxShape.circle,
                                         color: isSelectedOpt
-                                            ? theme.colorScheme.primary
+                                            ? Theme.of(context).colorScheme.primary
                                             : Colors.transparent,
                                         border: Border.all(
                                           color: isSelectedOpt
-                                              ? theme.colorScheme.primary
+                                              ? Theme.of(context).colorScheme.primary
                                               : theme.dividerColor,
                                           width: 2,
                                         ),
@@ -314,7 +314,7 @@ class _QuizSessionScreenState extends ConsumerState<QuizSessionScreen> {
                                       child: Text(
                                         String.fromCharCode(65 + optIndex), // A, B, C, D
                                         style: TextStyle(
-                                          fontFamily: 'Poppins',
+                                          
                                           fontSize: 12,
                                           fontWeight: FontWeight.bold,
                                           color: isSelectedOpt
@@ -330,7 +330,7 @@ class _QuizSessionScreenState extends ConsumerState<QuizSessionScreen> {
                                         style: theme.textTheme.bodyMedium?.copyWith(
                                           fontWeight: isSelectedOpt ? FontWeight.bold : FontWeight.w500,
                                           color: isSelectedOpt
-                                              ? theme.colorScheme.primary
+                                              ? Theme.of(context).colorScheme.primary
                                               : theme.colorScheme.onSurface,
                                         ),
                                       ),
@@ -368,16 +368,16 @@ class _QuizSessionScreenState extends ConsumerState<QuizSessionScreen> {
                             );
                           },
                           style: OutlinedButton.styleFrom(
-                            side: BorderSide(color: theme.colorScheme.primary),
+                            side: BorderSide(color: Theme.of(context).colorScheme.primary),
                             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                           ),
                           child: Text(
                             localizations.translate('quiz_previous'),
                             style: TextStyle(
-                              fontFamily: 'Poppins',
+                              
                               fontWeight: FontWeight.bold,
-                              color: theme.colorScheme.primary,
+                              color: Theme.of(context).colorScheme.primary,
                             ),
                           ),
                         )
@@ -405,8 +405,8 @@ class _QuizSessionScreenState extends ConsumerState<QuizSessionScreen> {
                             }
                           },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: theme.colorScheme.primary,
-                      disabledBackgroundColor: theme.colorScheme.primary.withOpacity(0.3),
+                      backgroundColor: Theme.of(context).colorScheme.primary,
+                      disabledBackgroundColor: Theme.of(context).colorScheme.primary.withOpacity(0.3),
                       padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 12),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       elevation: 0,
@@ -414,7 +414,7 @@ class _QuizSessionScreenState extends ConsumerState<QuizSessionScreen> {
                     child: Text(
                       isLastQuestion ? localizations.translate('quiz_finish') : localizations.translate('quiz_next'),
                       style: TextStyle(
-                        fontFamily: 'Poppins',
+                        
                         fontWeight: FontWeight.bold,
                         color: selectedOption == null
                             ? Colors.white.withOpacity(0.5)
@@ -443,10 +443,10 @@ class _QuizSessionScreenState extends ConsumerState<QuizSessionScreen> {
       appBar: AppBar(
         title: Text(
           localizations.translate('quiz'),
-          style: const TextStyle(fontFamily: 'Playfair Display', fontWeight: FontWeight.bold),
+          style: TextStyle( fontWeight: FontWeight.bold),
         ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
+          icon: Icon(Icons.arrow_back),
           onPressed: () => Navigator.pop(context),
         ),
       ),
@@ -478,7 +478,7 @@ class _QuizSessionScreenState extends ConsumerState<QuizSessionScreen> {
                     Positioned.fill(
                       child: CustomPaint(
                         painter: IslamicArchPainter(
-                          outlineColor: AppTheme.warmGold.withOpacity(0.1),
+                          outlineColor: Theme.of(context).colorScheme.tertiary.withOpacity(0.1),
                           fillColor: Colors.transparent,
                           strokeWidth: 2.0,
                         ),
@@ -488,15 +488,15 @@ class _QuizSessionScreenState extends ConsumerState<QuizSessionScreen> {
                       padding: const EdgeInsets.symmetric(vertical: 24.0),
                       child: Column(
                         children: [
-                          const Icon(Icons.emoji_events_outlined, size: 72, color: AppTheme.premiumGold),
+                          Icon(Icons.emoji_events_outlined, size: 72, color: Theme.of(context).colorScheme.tertiary),
                           const SizedBox(height: 16),
                           Text(
                             localizations.translate('quiz_completed_title'),
                             style: theme.textTheme.titleLarge?.copyWith(
-                              fontFamily: 'Playfair Display',
+                              
                               fontSize: 22,
                               fontWeight: FontWeight.bold,
-                              color: theme.colorScheme.primary,
+                              color: Theme.of(context).colorScheme.primary,
                             ),
                           ),
                           const SizedBox(height: 8),
@@ -505,7 +505,7 @@ class _QuizSessionScreenState extends ConsumerState<QuizSessionScreen> {
                             child: Text(
                               localizations.translate('quiz_completed_sub'),
                               textAlign: TextAlign.center,
-                              style: const TextStyle(height: 1.4),
+                              style: TextStyle(height: 1.4),
                             ),
                           ),
                           const SizedBox(height: 24),
@@ -514,29 +514,29 @@ class _QuizSessionScreenState extends ConsumerState<QuizSessionScreen> {
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                             decoration: BoxDecoration(
-                              color: theme.colorScheme.primary.withOpacity(0.06),
+                              color: Theme.of(context).colorScheme.primary.withOpacity(0.06),
                               borderRadius: BorderRadius.circular(16),
-                              border: Border.all(color: theme.colorScheme.primary.withOpacity(0.15)),
+                              border: Border.all(color: Theme.of(context).colorScheme.primary.withOpacity(0.15)),
                             ),
                             child: Column(
                               children: [
                                 Text(
                                   localizations.translate('quiz_lifetime_score'),
                                   style: TextStyle(
-                                    fontFamily: 'Poppins',
+                                    
                                     fontSize: 12,
                                     fontWeight: FontWeight.w600,
-                                    color: theme.colorScheme.primary,
+                                    color: Theme.of(context).colorScheme.primary,
                                   ),
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
                                   '${localizations.localizeDigits(state.totalPoints.toString())} ${localizations.translate('quiz_points')}',
-                                  style: const TextStyle(
-                                    fontFamily: 'Poppins',
+                                  style: TextStyle(
+                                    
                                     fontSize: 24,
                                     fontWeight: FontWeight.bold,
-                                    color: AppTheme.premiumGold,
+                                    color: Theme.of(context).colorScheme.tertiary,
                                   ),
                                 ),
                               ],
@@ -558,18 +558,18 @@ class _QuizSessionScreenState extends ConsumerState<QuizSessionScreen> {
                     MaterialPageRoute(builder: (context) => const QuizResultsScreen()),
                   );
                 },
-                icon: const Icon(Icons.chrome_reader_mode_outlined, color: Color(0xFF0B2A18)),
+                icon: Icon(Icons.chrome_reader_mode_outlined, color: Color(0xFF0B2A18)),
                 label: Text(
                   localizations.translate('tafsir_review'),
-                  style: const TextStyle(
-                    fontFamily: 'Poppins',
+                  style: TextStyle(
+                    
                     fontWeight: FontWeight.bold,
                     fontSize: 16,
                     color: Color(0xFF0B2A18),
                   ),
                 ),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.warmGold,
+                  backgroundColor: Theme.of(context).colorScheme.tertiary,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                   elevation: 0,
@@ -590,7 +590,7 @@ class _QuizSessionScreenState extends ConsumerState<QuizSessionScreen> {
                 child: Text(
                   'Debug Reset Quiz',
                   style: TextStyle(
-                    fontFamily: 'Poppins',
+                    
                     fontSize: 12,
                     color: Colors.redAccent.withOpacity(0.7),
                   ),

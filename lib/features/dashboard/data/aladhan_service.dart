@@ -316,18 +316,29 @@ class AlAdhanService {
 
   String _getMethodName(int methodId) {
     switch (methodId) {
+      case 0: return 'Shia Ithna-Ashari, Leva Institute, Qum';
       case 1: return 'University of Islamic Sciences, Karachi';
       case 2: return 'Islamic Society of North America (ISNA)';
       case 3: return 'Muslim World League (MWL)';
       case 4: return 'Umm Al-Qura University, Makkah';
       case 5: return 'Egyptian General Authority of Survey';
+      case 7: return 'Institute of Geophysics, University of Tehran';
       case 8: return 'Gulf Region';
       case 9: return 'Kuwait';
       case 10: return 'Qatar';
       case 11: return 'MUIS, Singapore';
-      case 12: return 'UOIF, France';
+      case 12: return 'Union Organization Islamic de France';
       case 13: return 'Diyanet, Turkey';
-      case 14: return 'Russia';
+      case 14: return 'Spiritual Administration of Muslims of Russia';
+      case 15: return 'Moonsighting Committee Worldwide';
+      case 16: return 'Dubai (experimental)';
+      case 17: return 'Jabatan Kemajuan Islam Malaysia (JAKIM)';
+      case 18: return 'Tunisia';
+      case 19: return 'Algeria';
+      case 20: return 'Kementerian Agama Republik Indonesia';
+      case 21: return 'Morocco';
+      case 22: return 'Comunidade Islamica de Lisboa, Portugal';
+      case 23: return 'Ministry of Awqaf, Jordan';
       default: return 'Umm Al-Qura University, Makkah';
     }
   }

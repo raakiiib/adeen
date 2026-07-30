@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:adeen/core/localization/app_localizations.dart';
 import 'package:adeen/core/theme/app_theme.dart';
-import 'package:adeen/core/theme/islamic_painters.dart';
 import 'package:adeen/features/dashboard/presentation/controllers/prayer_controller.dart';
 
 class QazaTrackerScreen extends ConsumerWidget {
@@ -12,177 +11,125 @@ class QazaTrackerScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final localizations = AppLocalizations.of(context);
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final tracker = ref.watch(trackerLogProvider);
     final notifier = ref.read(trackerLogProvider.notifier);
 
     return Scaffold(
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
         title: Text(
           localizations.translate('qaza_tracker'),
-          style: const TextStyle(
-            fontFamily: 'Playfair Display',
+          style: TextStyle(
+            fontFamily: theme.appBarTheme.titleTextStyle?.fontFamily,
             fontWeight: FontWeight.bold,
+            color: isDark ? AppTheme.warmGold : theme.colorScheme.primary,
           ),
         ),
         centerTitle: true,
         elevation: 0,
         backgroundColor: Colors.transparent,
-        foregroundColor: theme.colorScheme.onBackground,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_rounded),
+          onPressed: () => Navigator.pop(context),
+        ),
       ),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16.0),
+          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Premium Header / Islamic visual anchor
-              Center(
-                child: Column(
-                  children: [
-                    Text(
-                      'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ',
-                      style: TextStyle(
-                        fontFamily: 'Amiri',
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: theme.brightness == Brightness.dark
-                            ? AppTheme.warmGold
-                            : theme.colorScheme.primary,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      localizations.translate('bismillah'),
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontFamily: 'Poppins',
-                        fontSize: 12,
-                        fontStyle: FontStyle.italic,
-                        color: theme.textTheme.bodyMedium?.color?.withOpacity(0.7),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 32),
-
               // Qaza Description & Visual Info
               Card(
                 elevation: 2,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16),
-                  side: BorderSide(
-                    color: AppTheme.warmGold.withOpacity(0.2),
-                    width: 1,
-                  ),
+                  side: BorderSide(color: theme.dividerColor.withOpacity(0.08), width: 1),
                 ),
                 child: Padding(
-                  padding: const EdgeInsets.all(20.0),
+                  padding: const EdgeInsets.all(16.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       Row(
                         children: [
-                          Icon(
-                            Icons.history,
-                            color: theme.colorScheme.primary,
-                            size: 22,
+                          CircleAvatar(
+                            backgroundColor: Theme.of(context).colorScheme.tertiary.withOpacity(0.12),
+                            child: Icon(
+                              Icons.history_rounded,
+                              color: Theme.of(context).colorScheme.tertiary,
+                              size: 20,
+                            ),
                           ),
-                          const SizedBox(width: 8),
+                          const SizedBox(width: 12),
                           Text(
                             localizations.translate('qaza_backlog'),
-                            style: theme.textTheme.titleMedium?.copyWith(
+                            style: const TextStyle(
+                              fontFamily: 'Poppins',
                               fontWeight: FontWeight.bold,
-                              fontFamily: 'Playfair Display',
+                              fontSize: 14,
                             ),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 10),
                       Text(
                         'Track and log prayers you have missed (Qaza). As you make up for them, decrement the counter here to stay on top of your backlog.',
                         style: TextStyle(
-                          fontSize: 13,
+                          fontFamily: 'Poppins',
+                          fontSize: 12,
                           height: 1.4,
-                          color: theme.textTheme.bodyMedium?.color?.withOpacity(0.7),
+                          color: theme.colorScheme.onSurface.withOpacity(0.6),
                         ),
                       ),
-                      const SizedBox(height: 20),
-                      const Divider(),
-                      const SizedBox(height: 10),
-
-                      // List of Missed Qaza Prayers
+                      const SizedBox(height: 12),
+                      Divider(color: theme.dividerColor.withOpacity(0.08)),
+                      
+                      // List of Missed Qaza Prayers (flat tiles, no border on rows)
                       Column(
                         children: ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'].map((p) {
                           final count = tracker.qazaCounts[p] ?? 0;
-                          return Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 8.0),
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 8,
+                          return ListTile(
+                            contentPadding: EdgeInsets.zero,
+                            title: Text(
+                              localizations.translate(p.toLowerCase()),
+                              style: TextStyle(
+                                fontFamily: 'Poppins',
+                                fontSize: 14,
+                                fontWeight: count > 0 ? FontWeight.bold : FontWeight.normal,
+                                color: count > 0 ? theme.colorScheme.primary : theme.colorScheme.onSurface,
                               ),
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(
-                                  color: count > 0
-                                      ? AppTheme.warmGold.withOpacity(0.4)
-                                      : Colors.grey.withOpacity(0.15),
+                            ),
+                            trailing: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                IconButton(
+                                  onPressed: () => notifier.decrementQaza(p),
+                                  icon: const Icon(Icons.remove_circle_outline_rounded, size: 22),
+                                  color: Colors.red.shade400,
                                 ),
-                                color: count > 0
-                                    ? theme.colorScheme.primary.withOpacity(0.02)
-                                    : Colors.transparent,
-                              ),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(
-                                    localizations.translate(p.toLowerCase()),
+                                Container(
+                                  constraints: const BoxConstraints(minWidth: 32),
+                                  alignment: Alignment.center,
+                                  child: Text(
+                                    localizations.localizeDigits('$count'),
                                     style: TextStyle(
                                       fontFamily: 'Poppins',
-                                      fontSize: 16,
-                                      fontWeight: count > 0
-                                          ? FontWeight.bold
-                                          : FontWeight.normal,
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.bold,
+                                      color: count > 0
+                                          ? theme.colorScheme.primary
+                                          : theme.colorScheme.onSurface.withOpacity(0.5),
                                     ),
                                   ),
-                                  Row(
-                                    children: [
-                                      IconButton(
-                                        onPressed: () => notifier.decrementQaza(p),
-                                        icon: const Icon(
-                                          Icons.remove_circle_outline,
-                                          size: 24,
-                                        ),
-                                        color: Colors.red.shade400,
-                                      ),
-                                      Container(
-                                        constraints: const BoxConstraints(minWidth: 40),
-                                        alignment: Alignment.center,
-                                        child: Text(
-                                          localizations.localizeDigits('$count'),
-                                          style: TextStyle(
-                                            fontFamily: 'Poppins',
-                                            fontSize: 18,
-                                            fontWeight: FontWeight.bold,
-                                            color: count > 0
-                                                ? theme.colorScheme.primary
-                                                : theme.colorScheme.onSurface,
-                                          ),
-                                        ),
-                                      ),
-                                      IconButton(
-                                        onPressed: () => notifier.incrementQaza(p),
-                                        icon: const Icon(
-                                          Icons.add_circle_outline,
-                                          size: 24,
-                                        ),
-                                        color: theme.colorScheme.secondary,
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              ),
+                                ),
+                                IconButton(
+                                  onPressed: () => notifier.incrementQaza(p),
+                                  icon: const Icon(Icons.add_circle_outline_rounded, size: 22),
+                                  color: theme.colorScheme.secondary,
+                                ),
+                              ],
                             ),
                           );
                         }).toList(),
@@ -191,20 +138,7 @@ class QazaTrackerScreen extends ConsumerWidget {
                   ),
                 ),
               ),
-              const SizedBox(height: 32),
-
-              // Tasbih/Beads decorative motif
-              Center(
-                child: SizedBox(
-                  width: 60,
-                  height: 60,
-                  child: CustomPaint(
-                    painter: TasbihBeadsPainter(
-                      color: AppTheme.warmGold.withOpacity(0.1),
-                    ),
-                  ),
-                ),
-              ),
+              const SizedBox(height: 24),
             ],
           ),
         ),

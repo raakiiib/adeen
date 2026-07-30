@@ -4,6 +4,7 @@ import 'package:adeen/core/localization/app_localizations.dart';
 import 'package:adeen/core/theme/app_theme.dart';
 import 'package:adeen/features/dashboard/presentation/controllers/prayer_controller.dart';
 import 'package:adeen/features/profile/presentation/screens/profile_screen.dart';
+import 'package:adeen/features/dashboard/presentation/screens/calculation_settings_screen.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -12,53 +13,210 @@ class SettingsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final localizations = AppLocalizations.of(context);
     final theme = Theme.of(context);
-    
+    final isDark = theme.brightness == Brightness.dark;
+
     final activeThemeMode = ref.watch(themeModeProvider);
     final activePreset = ref.watch(colorPresetProvider);
     final activeLocale = ref.watch(localeProvider);
     final activeMethod = ref.watch(calculationMethodProvider);
-    final activeSchool = ref.watch(juristicSchoolProvider);
-    final timingsState = ref.watch(prayerTimesProvider);
+
+    // Get localized active method name
+    final methods = {
+      0: localizations.translate('method_jafari'),
+      1: localizations.translate('method_karachi'),
+      2: localizations.translate('method_isna'),
+      3: localizations.translate('method_mwl'),
+      4: localizations.translate('method_umm_al_qura'),
+      5: localizations.translate('method_egyptian'),
+      7: localizations.translate('method_tehran'),
+      8: localizations.translate('method_gulf'),
+      9: localizations.translate('method_kuwait'),
+      10: localizations.translate('method_qatar'),
+      11: localizations.translate('method_singapore'),
+      12: localizations.translate('method_france'),
+      13: localizations.translate('method_turkey'),
+      14: localizations.translate('method_russia'),
+      15: localizations.translate('method_moonsighting'),
+      16: localizations.translate('method_dubai'),
+      17: localizations.translate('method_jakim'),
+      18: localizations.translate('method_tunisia'),
+      19: localizations.translate('method_algeria'),
+      20: localizations.translate('method_kemenag'),
+      21: localizations.translate('method_morocco'),
+      22: localizations.translate('method_portugal'),
+      23: localizations.translate('method_jordan'),
+    };
+    final activeMethodName = methods[activeMethod] ?? 'Umm Al-Qura';
 
     return Scaffold(
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
         title: Text(
           localizations.translate('settings'),
-          style: const TextStyle(fontFamily: 'Playfair Display', fontWeight: FontWeight.bold),
+          style: TextStyle(
+            fontFamily: theme.appBarTheme.titleTextStyle?.fontFamily,
+            fontWeight: FontWeight.bold,
+            color: isDark ? AppTheme.warmGold : theme.colorScheme.primary,
+          ),
         ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => Navigator.pop(context),
         ),
+        centerTitle: true,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+      body: SafeArea(
+        child: ListView(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
           children: [
-            // 0. User Profile Navigation Card
+            // ── SECTION: ACCOUNT ──
+            _buildSectionHeader(localizations.translate('profile').toUpperCase(), theme),
+            const SizedBox(height: 8),
             _buildProfileCard(context, localizations, theme),
-            const SizedBox(height: 16),
 
-            // 1. Language Preference Card
-            _buildLanguageCard(context, ref, activeLocale, localizations, theme),
-            const SizedBox(height: 16),
+            const SizedBox(height: 24),
 
-            // 2. Theme Mode Selection Card
-            _buildThemeModeCard(context, ref, activeThemeMode, localizations, theme),
-            const SizedBox(height: 16),
+            // ── SECTION: LANGUAGE ──
+            _buildSectionHeader(localizations.translate('change_lang').split(' / ')[0].toUpperCase(), theme),
+            const SizedBox(height: 8),
+            Card(
+              elevation: 2,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+                side: BorderSide(color: theme.dividerColor.withOpacity(0.08), width: 1),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: _buildLanguageDropdown(context, ref, activeLocale, localizations, theme),
+              ),
+            ),
 
-            // 3. Color Preset Preset Selector
-            _buildColorPresetCard(context, ref, activePreset, localizations, theme),
-            const SizedBox(height: 16),
+            const SizedBox(height: 24),
 
-            // 4. Calculation Method Selector
-            _buildCalculationMethodCard(context, ref, activeMethod, timingsState, localizations, theme),
-            const SizedBox(height: 16),
+            // ── SECTION: THEME & STYLE (Combined Theme Mode & Color Scheme) ──
+            _buildSectionHeader(localizations.translate('theme_mode').toUpperCase(), theme),
+            const SizedBox(height: 8),
+            Card(
+              elevation: 2,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+                side: BorderSide(color: theme.dividerColor.withOpacity(0.08), width: 1),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildThemeModeRow(context, ref, activeThemeMode, localizations, theme),
+                    const SizedBox(height: 16),
+                    Divider(color: theme.dividerColor.withOpacity(0.12), height: 1),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        Icon(Icons.palette_outlined, size: 18, color: Theme.of(context).colorScheme.tertiary),
+                        const SizedBox(width: 8),
+                        Text(
+                          localizations.translate('color_scheme'),
+                          style: const TextStyle(
+                            fontFamily: 'Poppins',
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    _buildColorPresetList(context, ref, activePreset, localizations, theme),
+                  ],
+                ),
+              ),
+            ),
 
-            // 5. Juristic Method (School of Thought) Selector
-            _buildJuristicSchoolCard(context, ref, activeSchool, localizations, theme),
+            const SizedBox(height: 24),
+
+            // ── SECTION: CALCULATIONS ──
+            _buildSectionHeader(localizations.translate('calculation_settings').toUpperCase(), theme),
+            const SizedBox(height: 8),
+            Card(
+              elevation: 2,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+                side: BorderSide(color: theme.dividerColor.withOpacity(0.08), width: 1),
+              ),
+              child: InkWell(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const CalculationSettingsScreen(),
+                    ),
+                  );
+                },
+                borderRadius: BorderRadius.circular(16),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                  child: Row(
+                    children: [
+                      CircleAvatar(
+                        backgroundColor: Theme.of(context).colorScheme.tertiary.withOpacity(0.1),
+                        child: Icon(Icons.settings_suggest_outlined, color: Theme.of(context).colorScheme.tertiary),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              localizations.translate('calculation_settings'),
+                              style: const TextStyle(
+                                fontFamily: 'Poppins',
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              activeMethodName,
+                              style: TextStyle(
+                                fontFamily: 'Poppins',
+                                fontSize: 12,
+                                color: theme.colorScheme.onSurface.withOpacity(0.6),
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ),
+                      ),
+                      Icon(
+                        Icons.chevron_right_rounded,
+                        color: Theme.of(context).colorScheme.tertiary,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 24),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSectionHeader(String title, ThemeData theme) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4.0),
+      child: Text(
+        title,
+        style: TextStyle(
+          fontFamily: 'Poppins',
+          fontSize: 11,
+          fontWeight: FontWeight.bold,
+          color: theme.colorScheme.primary,
+          letterSpacing: 0.8,
         ),
       ),
     );
@@ -70,26 +228,36 @@ class SettingsScreen extends ConsumerWidget {
     ThemeData theme,
   ) {
     return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: theme.dividerColor.withOpacity(0.08), width: 1),
+      ),
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         leading: CircleAvatar(
-          backgroundColor: AppTheme.warmGold.withOpacity(0.12),
+          backgroundColor: Theme.of(context).colorScheme.tertiary.withOpacity(0.12),
           child: Icon(Icons.person, color: theme.colorScheme.primary),
         ),
         title: Text(
           localizations.translate('profile'),
-          style: theme.textTheme.titleMedium?.copyWith(
+          style: const TextStyle(
+            fontFamily: 'Poppins',
             fontWeight: FontWeight.bold,
+            fontSize: 14,
           ),
         ),
         subtitle: Text(
           localizations.translate('hub_profile_sub'),
-          style: theme.textTheme.bodyMedium,
+          style: TextStyle(
+            fontFamily: 'Poppins',
+            fontSize: 12,
+            color: theme.colorScheme.onSurface.withOpacity(0.6),
+          ),
         ),
         trailing: Icon(
-          Icons.arrow_forward_ios,
-          size: 14,
-          color: theme.colorScheme.primary,
+          Icons.chevron_right_rounded,
+          color: Theme.of(context).colorScheme.tertiary,
         ),
         onTap: () {
           Navigator.push(
@@ -101,7 +269,7 @@ class SettingsScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildLanguageCard(
+  Widget _buildLanguageDropdown(
     BuildContext context,
     WidgetRef ref,
     Locale locale,
@@ -120,97 +288,95 @@ class SettingsScreen extends ConsumerWidget {
       'fr': 'Français (French)',
     };
 
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
           children: [
-            Row(
-              children: [
-                const Icon(Icons.translate, size: 20, color: AppTheme.warmGold),
-                const SizedBox(width: 8),
-                Text(
-                  localizations.translate('change_lang').split(' / ')[0],
-                  style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            DropdownButtonFormField<String>(
-              value: locale.languageCode,
-              decoration: InputDecoration(
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: Colors.grey.withOpacity(0.2)),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: Colors.grey.withOpacity(0.2)),
-                ),
-              ),
-              dropdownColor: theme.cardTheme.color,
-              icon: const Icon(Icons.arrow_drop_down, color: AppTheme.warmGold),
-              style: TextStyle(
+            Icon(Icons.translate_rounded, size: 18, color: Theme.of(context).colorScheme.tertiary),
+            const SizedBox(width: 8),
+            Text(
+              localizations.translate('change_lang').split(' / ')[0],
+              style: const TextStyle(
                 fontFamily: 'Poppins',
-                color: theme.textTheme.bodyLarge?.color,
+                fontWeight: FontWeight.bold,
                 fontSize: 14,
               ),
-              items: languages.entries.map((entry) {
-                return DropdownMenuItem<String>(
-                  value: entry.key,
-                  child: Text(entry.value),
-                );
-              }).toList(),
-              onChanged: (val) {
-                if (val != null) {
-                  ref.read(localeProvider.notifier).setLocale(val);
-                }
-              },
             ),
           ],
         ),
-      ),
+        const SizedBox(height: 8),
+        DropdownButtonFormField<String>(
+          value: locale.languageCode,
+          decoration: InputDecoration(
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: theme.dividerColor.withOpacity(0.12)),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: theme.dividerColor.withOpacity(0.12)),
+            ),
+          ),
+          dropdownColor: theme.cardTheme.color,
+          icon: Icon(Icons.arrow_drop_down_rounded, color: Theme.of(context).colorScheme.tertiary),
+          style: TextStyle(
+            fontFamily: 'Poppins',
+            color: theme.textTheme.bodyLarge?.color,
+            fontSize: 14,
+          ),
+          items: languages.entries.map((entry) {
+            return DropdownMenuItem<String>(
+              value: entry.key,
+              child: Text(entry.value),
+            );
+          }).toList(),
+          onChanged: (val) {
+            if (val != null) {
+              ref.read(localeProvider.notifier).setLocale(val);
+            }
+          },
+        ),
+      ],
     );
   }
 
-  Widget _buildThemeModeCard(
+  Widget _buildThemeModeRow(
     BuildContext context,
     WidgetRef ref,
     ThemeMode themeMode,
     AppLocalizations localizations,
     ThemeData theme,
   ) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
           children: [
-            Row(
-              children: [
-                const Icon(Icons.palette_outlined, size: 20, color: AppTheme.warmGold),
-                const SizedBox(width: 8),
-                Text(
-                  localizations.translate('theme_mode'),
-                  style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                _buildThemeOption(ref, ThemeMode.system, Icons.brightness_auto, localizations.translate('theme_system'), themeMode, theme),
-                const SizedBox(width: 8),
-                _buildThemeOption(ref, ThemeMode.light, Icons.light_mode_outlined, localizations.translate('theme_light'), themeMode, theme),
-                const SizedBox(width: 8),
-                _buildThemeOption(ref, ThemeMode.dark, Icons.dark_mode_outlined, localizations.translate('theme_dark'), themeMode, theme),
-              ],
+            Icon(Icons.palette_outlined, size: 18, color: Theme.of(context).colorScheme.tertiary),
+            const SizedBox(width: 8),
+            Text(
+              localizations.translate('theme_mode'),
+              style: const TextStyle(
+                fontFamily: 'Poppins',
+                fontWeight: FontWeight.bold,
+                fontSize: 14,
+              ),
             ),
           ],
         ),
-      ),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            _buildThemeOption(ref, ThemeMode.system, Icons.brightness_auto_rounded, localizations.translate('theme_system'), themeMode, theme),
+            const SizedBox(width: 8),
+            _buildThemeOption(ref, ThemeMode.light, Icons.light_mode_rounded, localizations.translate('theme_light'), themeMode, theme),
+            const SizedBox(width: 8),
+            _buildThemeOption(ref, ThemeMode.dark, Icons.dark_mode_rounded, localizations.translate('theme_dark'), themeMode, theme),
+          ],
+        ),
+      ],
     );
   }
 
@@ -223,6 +389,7 @@ class SettingsScreen extends ConsumerWidget {
     ThemeData theme,
   ) {
     final isSelected = currentMode == targetMode;
+    final isDark = theme.brightness == Brightness.dark;
     return Expanded(
       child: GestureDetector(
         onTap: () => ref.read(themeModeProvider.notifier).updateThemeMode(targetMode),
@@ -236,8 +403,8 @@ class SettingsScreen extends ConsumerWidget {
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
               color: isSelected
-                  ? theme.colorScheme.primary
-                  : Colors.grey.withOpacity(0.2),
+                  ? (isDark ? theme.colorScheme.primary : Colors.transparent)
+                  : theme.dividerColor.withOpacity(0.12),
               width: 1.5,
             ),
           ),
@@ -245,7 +412,7 @@ class SettingsScreen extends ConsumerWidget {
             children: [
               Icon(
                 icon,
-                color: isSelected ? theme.colorScheme.primary : Colors.grey,
+                color: isSelected ? theme.colorScheme.primary : theme.colorScheme.onSurface.withOpacity(0.4),
                 size: 20,
               ),
               const SizedBox(height: 6),
@@ -253,9 +420,9 @@ class SettingsScreen extends ConsumerWidget {
                 label,
                 style: TextStyle(
                   fontFamily: 'Poppins',
-                  fontSize: 12,
+                  fontSize: 11,
                   fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                  color: isSelected ? theme.colorScheme.primary : Colors.grey,
+                  color: isSelected ? theme.colorScheme.primary : theme.colorScheme.onSurface.withOpacity(0.6),
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -266,326 +433,74 @@ class SettingsScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildColorPresetCard(
+  Widget _buildColorPresetList(
     BuildContext context,
     WidgetRef ref,
     String activePreset,
     AppLocalizations localizations,
     ThemeData theme,
   ) {
+    final isDark = theme.brightness == Brightness.dark;
     final presets = [
       _PresetItem('emerald', localizations.translate('color_emerald'), AppTheme.emeraldDeep, AppTheme.emeraldSage),
       _PresetItem('sapphire', localizations.translate('color_sapphire'), AppTheme.sapphireDeep, AppTheme.sapphireRoyal),
       _PresetItem('ruby', localizations.translate('color_ruby'), AppTheme.rubyDeep, AppTheme.rubyAmber),
     ];
 
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
+    return Column(
+      children: presets.map((preset) {
+        final isSelected = activePreset == preset.key;
+        return Container(
+          margin: const EdgeInsets.only(bottom: 8),
+          child: ListTile(
+            onTap: () => ref.read(colorPresetProvider.notifier).updatePreset(preset.key),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+              side: BorderSide(
+                color: isSelected
+                    ? (isDark ? theme.colorScheme.primary : Colors.transparent)
+                    : theme.dividerColor.withOpacity(0.15),
+                width: isSelected ? 1.5 : 1.0,
+              ),
+            ),
+            tileColor: isSelected
+                ? theme.colorScheme.primary.withOpacity(0.04)
+                : Colors.transparent,
+            leading: Row(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.style_outlined, size: 20, color: AppTheme.warmGold),
-                const SizedBox(width: 8),
-                Text(
-                  localizations.translate('color_scheme'),
-                  style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                Container(
+                  width: 14,
+                  height: 24,
+                  decoration: BoxDecoration(
+                    color: preset.color1,
+                    borderRadius: const BorderRadius.horizontal(left: Radius.circular(4)),
+                  ),
+                ),
+                Container(
+                  width: 14,
+                  height: 24,
+                  decoration: BoxDecoration(
+                    color: preset.color2,
+                    borderRadius: const BorderRadius.horizontal(right: Radius.circular(4)),
+                  ),
                 ),
               ],
             ),
-            const SizedBox(height: 12),
-            Column(
-              children: presets.map((preset) {
-                final isSelected = activePreset == preset.key;
-                return Container(
-                  margin: const EdgeInsets.only(bottom: 8),
-                  child: ListTile(
-                    onTap: () => ref.read(colorPresetProvider.notifier).updatePreset(preset.key),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      side: BorderSide(
-                        color: isSelected ? theme.colorScheme.primary : Colors.grey.withOpacity(0.15),
-                        width: isSelected ? 1.5 : 1.0,
-                      ),
-                    ),
-                    tileColor: isSelected
-                        ? theme.colorScheme.primary.withOpacity(0.04)
-                        : Colors.transparent,
-                    leading: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        // Dual color preview swatch
-                        Container(
-                          width: 14,
-                          height: 24,
-                          decoration: BoxDecoration(
-                            color: preset.color1,
-                            borderRadius: const BorderRadius.horizontal(left: Radius.circular(4)),
-                          ),
-                        ),
-                        Container(
-                          width: 14,
-                          height: 24,
-                          decoration: BoxDecoration(
-                            color: preset.color2,
-                            borderRadius: const BorderRadius.horizontal(right: Radius.circular(4)),
-                          ),
-                        ),
-                      ],
-                    ),
-                    title: Text(
-                      preset.label,
-                      style: TextStyle(
-                        fontFamily: 'Poppins',
-                        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                      ),
-                    ),
-                    trailing: isSelected
-                        ? Icon(Icons.check_circle, color: theme.colorScheme.primary)
-                        : null,
-                  ),
-                );
-              }).toList(),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildCalculationMethodCard(
-    BuildContext context,
-    WidgetRef ref,
-    int activeMethod,
-    PrayerTimesState timingsState,
-    AppLocalizations localizations,
-    ThemeData theme,
-  ) {
-    final methods = {
-      1: 'Karachi (Sciences)',
-      2: 'ISNA (North America)',
-      3: 'MWL (World League)',
-      4: 'Umm Al-Qura (Makkah)',
-      5: 'Egyptian Authority',
-      8: 'Gulf Region',
-      9: 'Kuwait',
-      10: 'Qatar',
-      11: 'MUIS (Singapore)',
-      13: 'Diyanet (Turkey)',
-    };
-
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                const Icon(Icons.settings_suggest_outlined, size: 20, color: AppTheme.warmGold),
-                const SizedBox(width: 8),
-                Text(
-                  localizations.translate('method'),
-                  style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            GestureDetector(
-              onTap: () => _showCalculationMethodDialog(context, ref, activeMethod, methods, localizations, theme),
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.grey.withOpacity(0.2)),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                      child: Text(
-                        methods[activeMethod] ?? 'Umm Al-Qura (Makkah)',
-                        style: const TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w500),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    const Icon(Icons.arrow_drop_down, color: AppTheme.warmGold),
-                  ],
-                ),
+            title: Text(
+              preset.label,
+              style: TextStyle(
+                fontFamily: 'Poppins',
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                fontSize: 13,
               ),
             ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _showCalculationMethodDialog(
-    BuildContext context,
-    WidgetRef ref,
-    int activeMethod,
-    Map<int, String> methods,
-    AppLocalizations localizations,
-    ThemeData theme,
-  ) {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          backgroundColor: Theme.of(context).cardTheme.color,
-          title: Text(
-            localizations.translate('method'),
-            style: const TextStyle(fontFamily: 'Playfair Display', fontWeight: FontWeight.bold),
+            trailing: isSelected
+                ? Icon(Icons.check_circle_rounded, color: theme.colorScheme.primary)
+                : null,
           ),
-          content: SizedBox(
-            width: double.maxFinite,
-            child: ListView(
-              shrinkWrap: true,
-              children: methods.entries.map((entry) {
-                return RadioListTile<int>(
-                  title: Text(
-                    entry.value,
-                    style: const TextStyle(fontFamily: 'Poppins', fontSize: 14),
-                  ),
-                  value: entry.key,
-                  groupValue: activeMethod,
-                  activeColor: AppTheme.warmGold,
-                  onChanged: (val) {
-                    if (val != null) {
-                      ref.read(calculationMethodProvider.notifier).updateMethod(val);
-                      Navigator.pop(context);
-                    }
-                  },
-                );
-              }).toList(),
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text(
-                localizations.translate('cancel'),
-                style: const TextStyle(color: AppTheme.warmGold),
-              ),
-            )
-          ],
         );
-      },
-    );
-  }
-
-  Widget _buildJuristicSchoolCard(
-    BuildContext context,
-    WidgetRef ref,
-    int activeSchool,
-    AppLocalizations localizations,
-    ThemeData theme,
-  ) {
-    final schools = {
-      0: localizations.translate('school_standard'),
-      1: localizations.translate('school_hanafi'),
-    };
-
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                const Icon(Icons.gavel_outlined, size: 20, color: AppTheme.warmGold),
-                const SizedBox(width: 8),
-                Text(
-                  localizations.translate('juristic_method'),
-                  style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            GestureDetector(
-              onTap: () => _showJuristicSchoolDialog(context, ref, activeSchool, schools, localizations, theme),
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.grey.withOpacity(0.2)),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                      child: Text(
-                        schools[activeSchool] ?? schools[0]!,
-                        style: const TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w500),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    const Icon(Icons.arrow_drop_down, color: AppTheme.warmGold),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _showJuristicSchoolDialog(
-    BuildContext context,
-    WidgetRef ref,
-    int activeSchool,
-    Map<int, String> schools,
-    AppLocalizations localizations,
-    ThemeData theme,
-  ) {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          backgroundColor: Theme.of(context).cardTheme.color,
-          title: Text(
-            localizations.translate('juristic_method'),
-            style: const TextStyle(fontFamily: 'Playfair Display', fontWeight: FontWeight.bold),
-          ),
-          content: SizedBox(
-            width: double.maxFinite,
-            child: ListView(
-              shrinkWrap: true,
-              children: schools.entries.map((entry) {
-                return RadioListTile<int>(
-                  title: Text(
-                    entry.value,
-                    style: const TextStyle(fontFamily: 'Poppins', fontSize: 14),
-                  ),
-                  value: entry.key,
-                  groupValue: activeSchool,
-                  activeColor: AppTheme.warmGold,
-                  onChanged: (val) {
-                    if (val != null) {
-                      ref.read(juristicSchoolProvider.notifier).updateSchool(val);
-                      ref.read(prayerTimesProvider.notifier).loadTimings(); // Trigger reload
-                      Navigator.pop(context);
-                    }
-                  },
-                );
-              }).toList(),
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text(
-                localizations.translate('cancel'),
-                style: const TextStyle(color: AppTheme.warmGold),
-              ),
-            )
-          ],
-        );
-      },
+      }).toList(),
     );
   }
 }

@@ -1,19 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:adeen/core/localization/app_localizations.dart';
-import 'package:adeen/core/theme/app_theme.dart';
-import 'package:adeen/core/theme/islamic_painters.dart';
 import 'package:adeen/features/dashboard/presentation/controllers/prayer_controller.dart';
 import 'package:adeen/features/dashboard/presentation/screens/prayer_tracker_screen.dart';
 import 'package:adeen/features/dashboard/presentation/screens/qaza_tracker_screen.dart';
-import 'package:adeen/features/profile/presentation/screens/profile_screen.dart';
 import 'package:adeen/features/mosque_map/presentation/screens/mosque_map_screen.dart';
 import 'package:adeen/features/quiz/presentation/screens/quiz_session_screen.dart';
-import 'package:adeen/features/settings/presentation/screens/settings_screen.dart';
 import 'package:adeen/features/dashboard/presentation/screens/prayer_calendar_screen.dart';
 import 'package:adeen/features/dashboard/presentation/screens/today_prayers_screen.dart';
 import 'package:adeen/features/dashboard/presentation/screens/sehri_iftar_calendar_screen.dart';
-import 'package:adeen/features/dashboard/presentation/screens/qibla_screen.dart';
+import 'package:adeen/features/dashboard/presentation/screens/calculation_settings_screen.dart';
 import 'package:intl/intl.dart';
 
 class DashboardScreen extends ConsumerWidget {
@@ -35,7 +31,7 @@ class DashboardScreen extends ConsumerWidget {
             await ref.read(locationProvider.notifier).determinePosition();
             await ref.read(prayerTimesProvider.notifier).loadTimings();
           },
-          color: AppTheme.warmGold,
+          color: Theme.of(context).colorScheme.tertiary,
           backgroundColor: theme.cardTheme.color,
           child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
@@ -139,13 +135,13 @@ class DashboardScreen extends ConsumerWidget {
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
               color: theme.brightness == Brightness.dark
-                  ? theme.colorScheme.primary.withOpacity(0.12)
-                  : theme.colorScheme.primary.withOpacity(0.04),
+                  ? Theme.of(context).colorScheme.primary.withOpacity(0.12)
+                  : Theme.of(context).colorScheme.primary.withOpacity(0.04),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
                 color: theme.brightness == Brightness.dark
-                    ? AppTheme.warmGold.withOpacity(0.2)
-                    : theme.colorScheme.primary.withOpacity(0.1),
+                    ? Theme.of(context).colorScheme.tertiary.withOpacity(0.2)
+                    : Theme.of(context).colorScheme.primary.withOpacity(0.1),
                 width: 1,
               ),
             ),
@@ -153,8 +149,8 @@ class DashboardScreen extends ConsumerWidget {
               Icons.notes_rounded,
               size: 22,
               color: theme.brightness == Brightness.dark
-                  ? AppTheme.warmGold
-                  : theme.colorScheme.primary,
+                  ? Theme.of(context).colorScheme.tertiary
+                  : Theme.of(context).colorScheme.primary,
             ),
           ),
         ),
@@ -165,22 +161,20 @@ class DashboardScreen extends ConsumerWidget {
             Text(
               '$dayName, $englishDate',
               style: theme.textTheme.titleMedium?.copyWith(
-                fontFamily: 'Playfair Display',
                 fontWeight: FontWeight.bold,
                 fontSize: 17,
                 color: theme.brightness == Brightness.dark
                     ? Colors.white
-                    : theme.colorScheme.primary,
+                    : Theme.of(context).colorScheme.primary,
               ),
             ),
             const SizedBox(height: 2),
             Text(
               hijriStr,
-              style: const TextStyle(
-                fontFamily: 'Poppins',
+              style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
-                color: AppTheme.premiumGold,
+                color: Theme.of(context).colorScheme.tertiary,
               ),
             ),
           ],
@@ -214,60 +208,105 @@ class DashboardScreen extends ConsumerWidget {
       icon = Icons.cloud_off;
     }
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        color: theme.brightness == Brightness.dark
-            ? theme.colorScheme.primary.withOpacity(0.15)
-            : theme.colorScheme.secondary.withOpacity(0.05),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
+    final activeMethod = ref.watch(calculationMethodProvider);
+
+    final methods = {
+      1: localizations.translate('method_karachi'),
+      2: localizations.translate('method_isna'),
+      3: localizations.translate('method_mwl'),
+      4: localizations.translate('method_umm_al_qura'),
+      5: localizations.translate('method_egyptian'),
+      8: localizations.translate('method_gulf'),
+      9: localizations.translate('method_kuwait'),
+      10: localizations.translate('method_qatar'),
+      11: localizations.translate('method_singapore'),
+      13: localizations.translate('method_turkey'),
+    };
+
+    final methodName =
+        methods[activeMethod] ??
+        timingsState.todayTimings?.method.split(' (')[0] ??
+        'Umm Al-Qura';
+
+    return Card(
+      elevation: 0,
+      margin: const EdgeInsets.symmetric(horizontal: 4.0),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(
           color: theme.brightness == Brightness.dark
-              ? AppTheme.warmGold.withOpacity(0.15)
-              : theme.colorScheme.secondary.withOpacity(0.1),
+              ? Theme.of(context).colorScheme.tertiary.withOpacity(0.15)
+              : Theme.of(context).colorScheme.secondary.withOpacity(0.1),
+          width: 1,
         ),
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Row(
+      color: theme.brightness == Brightness.dark
+          ? Theme.of(context).colorScheme.primary.withOpacity(0.15)
+          : Theme.of(context).colorScheme.secondary.withOpacity(0.05),
+      child: InkWell(
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const CalculationSettingsScreen(),
+            ),
+          );
+        },
+        borderRadius: BorderRadius.circular(16),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          child: Row(
             children: [
-              Icon(icon, size: 16, color: AppTheme.warmGold),
-              const SizedBox(width: 6),
-              Text(
-                locText,
-                style: textStyle?.copyWith(
-                  fontWeight: FontWeight.w500,
-                  fontSize: 13,
+              Expanded(
+                child: Row(
+                  children: [
+                    Icon(
+                      icon,
+                      size: 16,
+                      color: Theme.of(context).colorScheme.tertiary,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        locText,
+                        style: textStyle?.copyWith(
+                          fontWeight: FontWeight.w500,
+                          fontSize: 13,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              Flexible(
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Flexible(
+                      child: Text(
+                        methodName,
+                        style: textStyle?.copyWith(
+                          color: Theme.of(context).colorScheme.tertiary,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    Icon(
+                      Icons.chevron_right_rounded,
+                      size: 16,
+                      color: Theme.of(context).colorScheme.tertiary,
+                    ),
+                  ],
                 ),
               ),
             ],
           ),
-          // Calculation Method Dropdown / Button
-          GestureDetector(
-            onTap: () =>
-                _showCalculationMethodDialog(context, ref, localizations),
-            child: Row(
-              children: [
-                Text(
-                  timingsState.todayTimings?.method.split(' (')[0] ??
-                      'Umm Al-Qura',
-                  style: textStyle?.copyWith(
-                    color: AppTheme.warmGold,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 12,
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const Icon(
-                  Icons.arrow_drop_down,
-                  size: 16,
-                  color: AppTheme.warmGold,
-                ),
-              ],
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -285,7 +324,9 @@ class DashboardScreen extends ConsumerWidget {
         child: Container(
           height: 120,
           alignment: Alignment.center,
-          child: const CircularProgressIndicator(color: AppTheme.warmGold),
+          child: CircularProgressIndicator(
+            color: Theme.of(context).colorScheme.tertiary,
+          ),
         ),
       );
     }
@@ -295,7 +336,7 @@ class DashboardScreen extends ConsumerWidget {
     );
     final Color badgeColor = isForbidden
         ? theme.colorScheme.error
-        : AppTheme.warmGold;
+        : Theme.of(context).colorScheme.tertiary;
 
     final bool isFriday = DateTime.now().weekday == DateTime.friday;
     String currentKey = countdown.currentPrayerKey;
@@ -361,7 +402,6 @@ class DashboardScreen extends ConsumerWidget {
                         Text(
                           currentPrayerLabel.toUpperCase(),
                           style: TextStyle(
-                            fontFamily: 'Poppins',
                             fontSize: 9,
                             fontWeight: FontWeight.bold,
                             color: badgeColor.withOpacity(0.75),
@@ -375,7 +415,6 @@ class DashboardScreen extends ConsumerWidget {
                     Text(
                       currentPrayerName,
                       style: TextStyle(
-                        fontFamily: 'Playfair Display',
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
                         color: isForbidden
@@ -385,6 +424,7 @@ class DashboardScreen extends ConsumerWidget {
                       ),
                     ),
                     const SizedBox(height: 6),
+                    // Start → End time
                     // Start → End time
                     Row(
                       mainAxisSize: MainAxisSize.min,
@@ -397,10 +437,9 @@ class DashboardScreen extends ConsumerWidget {
                             ),
                           ),
                           style: TextStyle(
-                            fontFamily: 'Poppins',
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
-                            color: AppTheme.warmGold,
+                            color: Theme.of(context).colorScheme.tertiary,
                           ),
                         ),
                         Padding(
@@ -419,7 +458,6 @@ class DashboardScreen extends ConsumerWidget {
                             ),
                           ),
                           style: TextStyle(
-                            fontFamily: 'Poppins',
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
                             color: theme.colorScheme.onSurface.withOpacity(0.5),
@@ -442,7 +480,6 @@ class DashboardScreen extends ConsumerWidget {
                             child: Text(
                               localizations.translate('prayer_not_permitted'),
                               style: TextStyle(
-                                fontFamily: 'Poppins',
                                 fontSize: 10,
                                 fontWeight: FontWeight.w600,
                                 color: theme.colorScheme.error,
@@ -489,7 +526,7 @@ class DashboardScreen extends ConsumerWidget {
                           valueColor: AlwaysStoppedAnimation<Color>(
                             isForbidden
                                 ? theme.colorScheme.error
-                                : AppTheme.warmGold,
+                                : Theme.of(context).colorScheme.tertiary,
                           ),
                         ),
                       ),
@@ -502,7 +539,6 @@ class DashboardScreen extends ConsumerWidget {
                               countdown.formattedTime,
                             ),
                             style: TextStyle(
-                              fontFamily: 'Poppins',
                               fontSize: 15,
                               fontWeight: FontWeight.bold,
                               color: isForbidden
@@ -514,7 +550,6 @@ class DashboardScreen extends ConsumerWidget {
                           Text(
                             leftLabel,
                             style: TextStyle(
-                              fontFamily: 'Poppins',
                               fontSize: 9,
                               color: theme.colorScheme.onSurface.withOpacity(
                                 0.4,
@@ -525,12 +560,11 @@ class DashboardScreen extends ConsumerWidget {
                           Text(
                             '${localizations.localizeDigits(elapsedPercent.toString())}%',
                             style: TextStyle(
-                              fontFamily: 'Poppins',
                               fontSize: 10,
                               fontWeight: FontWeight.w600,
                               color: isForbidden
                                   ? theme.colorScheme.error
-                                  : AppTheme.warmGold,
+                                  : Theme.of(context).colorScheme.tertiary,
                             ),
                           ),
                         ],
@@ -548,7 +582,6 @@ class DashboardScreen extends ConsumerWidget {
                   Text(
                     nextPrayerLabel.toUpperCase(),
                     style: TextStyle(
-                      fontFamily: 'Poppins',
                       fontSize: 9,
                       fontWeight: FontWeight.bold,
                       color: theme.colorScheme.onSurface.withOpacity(0.4),
@@ -559,29 +592,29 @@ class DashboardScreen extends ConsumerWidget {
                   Text(
                     nextPrayerName,
                     style: TextStyle(
-                      fontFamily: 'Playfair Display',
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      color: theme.colorScheme.primary,
+                      color: Theme.of(context).colorScheme.primary,
                       height: 1.1,
                     ),
                   ),
                   const SizedBox(height: 6),
                   // Next prayer start time
-                  Text(
-                    localizations.localizeDigits(
-                      _formatTo12Hour(
-                        localizations,
-                        '${countdown.nextPrayerStartTime.hour.toString().padLeft(2, '0')}:${countdown.nextPrayerStartTime.minute.toString().padLeft(2, '0')}',
-                      ),
-                    ),
-                    style: TextStyle(
-                      fontFamily: 'Poppins',
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: theme.colorScheme.primary.withOpacity(0.85),
-                    ),
-                  ),
+                  // Text(
+                  //   localizations.localizeDigits(
+                  //     _formatTo12Hour(
+                  //       localizations,
+                  //       '${countdown.nextPrayerStartTime.hour.toString().padLeft(2, '0')}:${countdown.nextPrayerStartTime.minute.toString().padLeft(2, '0')}',
+                  //     ),
+                  //   ),
+                  //   style: TextStyle(
+                  //     fontSize: 12,
+                  //     fontWeight: FontWeight.w600,
+                  //     color: Theme.of(
+                  //       context,
+                  //     ).colorScheme.primary.withOpacity(0.85),
+                  //   ),
+                  // ),
                   // Next prayer end time
                   Text(
                     localizations.localizeDigits(
@@ -591,7 +624,6 @@ class DashboardScreen extends ConsumerWidget {
                       ),
                     ),
                     style: TextStyle(
-                      fontFamily: 'Poppins',
                       fontSize: 11,
                       color: theme.colorScheme.onSurface.withOpacity(0.4),
                     ),
@@ -613,15 +645,14 @@ class DashboardScreen extends ConsumerWidget {
     final theme = Theme.of(context);
     return Row(
       children: [
-        Icon(icon, size: 20, color: AppTheme.warmGold),
+        Icon(icon, size: 20, color: Theme.of(context).colorScheme.tertiary),
         const SizedBox(width: 8),
         Text(
           title,
           style: theme.textTheme.titleLarge?.copyWith(
-            fontFamily: 'Playfair Display',
             color: theme.brightness == Brightness.dark
-                ? AppTheme.warmGold
-                : theme.colorScheme.primary,
+                ? Theme.of(context).colorScheme.tertiary
+                : Theme.of(context).colorScheme.primary,
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -658,15 +689,15 @@ class DashboardScreen extends ConsumerWidget {
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
                   color: theme.brightness == Brightness.dark
-                      ? AppTheme.warmGold.withOpacity(0.12)
-                      : theme.colorScheme.primary.withOpacity(0.06),
+                      ? Theme.of(context).colorScheme.tertiary.withOpacity(0.12)
+                      : Theme.of(context).colorScheme.primary.withOpacity(0.06),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
                   Icons.calendar_month_outlined,
                   color: theme.brightness == Brightness.dark
-                      ? AppTheme.warmGold
-                      : theme.colorScheme.primary,
+                      ? Theme.of(context).colorScheme.tertiary
+                      : Theme.of(context).colorScheme.primary,
                   size: 24,
                 ),
               ),
@@ -678,7 +709,6 @@ class DashboardScreen extends ConsumerWidget {
                     Text(
                       localizations.translate('view_calendar'),
                       style: theme.textTheme.titleMedium?.copyWith(
-                        fontFamily: 'Poppins',
                         fontWeight: FontWeight.bold,
                         fontSize: 14.5,
                       ),
@@ -687,7 +717,6 @@ class DashboardScreen extends ConsumerWidget {
                     Text(
                       localizations.translate('calendar_subtitle'),
                       style: TextStyle(
-                        fontFamily: 'Poppins',
                         fontSize: 11,
                         color: theme.colorScheme.onSurface.withOpacity(0.55),
                       ),
@@ -715,46 +744,6 @@ class DashboardScreen extends ConsumerWidget {
   ) {
     return Column(
       children: [
-        Row(
-          children: [
-            _buildGridCard(
-              context: context,
-              title: localizations.translate('mosques'),
-              subtitle: localizations.translate('hub_mosques_sub'),
-              icon: Icons.map_outlined,
-              iconColor: theme.colorScheme.primary,
-              iconBgColor: theme.colorScheme.primary.withOpacity(0.12),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const MosqueMapScreen(),
-                  ),
-                );
-              },
-              theme: theme,
-            ),
-            const SizedBox(width: 8),
-            _buildGridCard(
-              context: context,
-              title: localizations.translate('quiz'),
-              subtitle: localizations.translate('hub_quiz_sub'),
-              icon: Icons.quiz_outlined,
-              iconColor: AppTheme.warmGold,
-              iconBgColor: AppTheme.warmGold.withOpacity(0.15),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const QuizSessionScreen(),
-                  ),
-                );
-              },
-              theme: theme,
-            ),
-          ],
-        ),
-        const SizedBox(height: 8),
         Row(
           children: [
             _buildGridCard(
@@ -794,6 +783,52 @@ class DashboardScreen extends ConsumerWidget {
             ),
           ],
         ),
+        const SizedBox(height: 8),
+
+        Row(
+          children: [
+            _buildGridCard(
+              context: context,
+              title: localizations.translate('mosques'),
+              subtitle: localizations.translate('hub_mosques_sub'),
+              icon: Icons.map_outlined,
+              iconColor: Theme.of(context).colorScheme.primary,
+              iconBgColor: Theme.of(
+                context,
+              ).colorScheme.primary.withOpacity(0.12),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const MosqueMapScreen(),
+                  ),
+                );
+              },
+              theme: theme,
+            ),
+            const SizedBox(width: 8),
+            _buildGridCard(
+              context: context,
+              title: localizations.translate('quiz'),
+              subtitle: localizations.translate('hub_quiz_sub'),
+              icon: Icons.quiz_outlined,
+              iconColor: Theme.of(context).colorScheme.tertiary,
+              iconBgColor: Theme.of(
+                context,
+              ).colorScheme.tertiary.withOpacity(0.15),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const QuizSessionScreen(),
+                  ),
+                );
+              },
+              theme: theme,
+            ),
+          ],
+        ),
+
         // const SizedBox(height: 8),
         // Row(
         //   children: [
@@ -842,8 +877,8 @@ class DashboardScreen extends ConsumerWidget {
         //       title: localizations.translate('qibla_finder'),
         //       subtitle: localizations.translate('hub_qibla_sub'),
         //       icon: Icons.explore_outlined,
-        //       iconColor: AppTheme.warmGold,
-        //       iconBgColor: AppTheme.warmGold.withOpacity(0.14),
+        //       iconColor: Theme.of(context).colorScheme.tertiary,
+        //       iconBgColor: Theme.of(context).colorScheme.tertiary.withOpacity(0.14),
         //       onTap: () {
         //         Navigator.push(
         //           context,
@@ -879,8 +914,8 @@ class DashboardScreen extends ConsumerWidget {
           borderRadius: BorderRadius.circular(16),
           side: BorderSide(
             color: isDark
-                ? AppTheme.warmGold.withOpacity(0.1)
-                : theme.colorScheme.primary.withOpacity(0.08),
+                ? Theme.of(context).colorScheme.tertiary.withOpacity(0.1)
+                : Theme.of(context).colorScheme.primary.withOpacity(0.08),
             width: 1.2,
           ),
         ),
@@ -905,11 +940,7 @@ class DashboardScreen extends ConsumerWidget {
                   title,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontFamily: 'Playfair Display',
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 4),
                 Text(
@@ -917,7 +948,6 @@ class DashboardScreen extends ConsumerWidget {
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    fontFamily: 'Poppins',
                     fontSize: 11,
                     color: theme.textTheme.bodyMedium?.color?.withOpacity(0.6),
                     height: 1.2,
@@ -931,77 +961,6 @@ class DashboardScreen extends ConsumerWidget {
     );
   }
 
-  void _showCalculationMethodDialog(
-    BuildContext context,
-    WidgetRef ref,
-    AppLocalizations localizations,
-  ) {
-    final activeMethod = ref.read(calculationMethodProvider);
-
-    final methods = {
-      1: 'Karachi (Sciences)',
-      2: 'ISNA (North America)',
-      3: 'MWL (World League)',
-      4: 'Umm Al-Qura (Makkah)',
-      5: 'Egyptian Authority',
-      8: 'Gulf Region',
-      9: 'Kuwait',
-      10: 'Qatar',
-      11: 'MUIS (Singapore)',
-      13: 'Diyanet (Turkey)',
-    };
-
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          backgroundColor: Theme.of(context).cardTheme.color,
-          title: Text(
-            localizations.translate('method'),
-            style: const TextStyle(
-              fontFamily: 'Playfair Display',
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          content: SizedBox(
-            width: double.maxFinite,
-            child: ListView(
-              shrinkWrap: true,
-              children: methods.entries.map((entry) {
-                return RadioListTile<int>(
-                  title: Text(
-                    entry.value,
-                    style: const TextStyle(fontFamily: 'Poppins', fontSize: 14),
-                  ),
-                  value: entry.key,
-                  groupValue: activeMethod,
-                  activeColor: AppTheme.warmGold,
-                  onChanged: (val) {
-                    if (val != null) {
-                      ref
-                          .read(calculationMethodProvider.notifier)
-                          .updateMethod(val);
-                      Navigator.pop(context);
-                    }
-                  },
-                );
-              }).toList(),
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text(
-                localizations.translate('cancel'),
-                style: const TextStyle(color: AppTheme.warmGold),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
   Widget _buildFastingTimesCard(
     BuildContext context,
     WidgetRef ref,
@@ -1012,6 +971,73 @@ class DashboardScreen extends ConsumerWidget {
     final today = timingsState.todayTimings;
 
     if (today == null) return const SizedBox.shrink();
+
+    // Rebuild every second using the existing countdown timer provider
+    ref.watch(countdownProvider);
+
+    DateTime? parseTimeStringToday(String timeStr) {
+      try {
+        if (timeStr.contains('(')) {
+          timeStr = timeStr.split('(')[0].trim();
+        }
+        final parts = timeStr.split(':');
+        final now = DateTime.now();
+        return DateTime(
+          now.year,
+          now.month,
+          now.day,
+          int.parse(parts[0]),
+          int.parse(parts[1]),
+        );
+      } catch (e) {
+        return null;
+      }
+    }
+
+    final now = DateTime.now();
+    final todayImsak = parseTimeStringToday(today.imsak);
+    final todayMaghrib = parseTimeStringToday(today.maghrib);
+
+    String statusText = '';
+    Duration remaining = Duration.zero;
+    double progress = 0.0;
+
+    if (todayImsak != null && todayMaghrib != null) {
+      if (now.isBefore(todayImsak)) {
+        statusText = localizations.translate('sehri_ends_in');
+        remaining = todayImsak.difference(now);
+        final yesterdayMaghrib = todayMaghrib.subtract(const Duration(days: 1));
+        final totalSecs = todayImsak.difference(yesterdayMaghrib).inSeconds;
+        final elapsedSecs = now.difference(yesterdayMaghrib).inSeconds;
+        if (totalSecs > 0) {
+          progress = (elapsedSecs / totalSecs).clamp(0.0, 1.0);
+        }
+      } else if (now.isBefore(todayMaghrib)) {
+        statusText = localizations.translate('iftar_in');
+        remaining = todayMaghrib.difference(now);
+        final totalSecs = todayMaghrib.difference(todayImsak).inSeconds;
+        final elapsedSecs = now.difference(todayImsak).inSeconds;
+        if (totalSecs > 0) {
+          progress = (elapsedSecs / totalSecs).clamp(0.0, 1.0);
+        }
+      } else {
+        statusText = localizations.translate('sehri_ends_in');
+        final tomorrowImsak = todayImsak.add(const Duration(days: 1));
+        remaining = tomorrowImsak.difference(now);
+        final totalSecs = tomorrowImsak.difference(todayMaghrib).inSeconds;
+        final elapsedSecs = now.difference(todayMaghrib).inSeconds;
+        if (totalSecs > 0) {
+          progress = (elapsedSecs / totalSecs).clamp(0.0, 1.0);
+        }
+      }
+    }
+
+    final hours = remaining.inHours.toString().padLeft(2, '0');
+    final minutes = (remaining.inMinutes % 60).toString().padLeft(2, '0');
+    final seconds = (remaining.inSeconds % 60).toString().padLeft(2, '0');
+    final remainingStr = localizations.localizeDigits(
+      '$hours:$minutes:$seconds',
+    );
 
     return Card(
       elevation: 2,
@@ -1032,86 +1058,131 @@ class DashboardScreen extends ConsumerWidget {
         borderRadius: BorderRadius.circular(16),
         child: Padding(
           padding: const EdgeInsets.all(16),
-          child: Row(
+          child: Column(
             children: [
-              // Sehri Column
-              Expanded(
-                child: Column(
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
+              Row(
+                children: [
+                  // Sehri Column
+                  Expanded(
+                    child: Column(
                       children: [
-                        const Icon(
-                          Icons.wb_twilight_outlined,
-                          size: 18,
-                          color: AppTheme.warmGold,
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.wb_twilight_outlined,
+                              size: 18,
+                              color: Theme.of(context).colorScheme.tertiary,
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              localizations.translate('sehri'),
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: theme.colorScheme.onSurface.withOpacity(
+                                  0.7,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
-                        const SizedBox(width: 6),
+                        const SizedBox(height: 8),
                         Text(
-                          localizations.translate('sehri'),
+                          _formatTo12Hour(localizations, today.imsak),
                           style: TextStyle(
-                            fontFamily: 'Poppins',
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: theme.colorScheme.onSurface.withOpacity(0.7),
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Theme.of(context).colorScheme.tertiary,
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 8),
-                    Text(
-                      _formatTo12Hour(localizations, today.imsak),
-                      style: const TextStyle(
-                        fontFamily: 'Poppins',
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: AppTheme.premiumGold,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+                  ),
 
-              // Vertical Divider
-              Container(height: 48, width: 1, color: theme.dividerColor),
+                  // Vertical Divider
+                  Container(height: 48, width: 1, color: theme.dividerColor),
 
-              // Iftar Column
-              Expanded(
-                child: Column(
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
+                  // Iftar Column
+                  Expanded(
+                    child: Column(
                       children: [
-                        const Icon(
-                          Icons.nights_stay_outlined,
-                          size: 18,
-                          color: AppTheme.warmGold,
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.nights_stay_outlined,
+                              size: 18,
+                              color: Theme.of(context).colorScheme.tertiary,
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              localizations.translate('iftar'),
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: theme.colorScheme.onSurface.withOpacity(
+                                  0.7,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
-                        const SizedBox(width: 6),
+                        const SizedBox(height: 8),
                         Text(
-                          localizations.translate('iftar'),
+                          _formatTo12Hour(localizations, today.maghrib),
                           style: TextStyle(
-                            fontFamily: 'Poppins',
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: theme.colorScheme.onSurface.withOpacity(0.7),
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Theme.of(context).colorScheme.tertiary,
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 8),
+                  ),
+                ],
+              ),
+              if (todayImsak != null &&
+                  todayMaghrib != null &&
+                  remaining.inMinutes <= 90) ...[
+                const SizedBox(height: 16),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(4),
+                  child: LinearProgressIndicator(
+                    value: progress,
+                    minHeight: 5,
+                    backgroundColor: Theme.of(
+                      context,
+                    ).colorScheme.tertiary.withOpacity(0.12),
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      Theme.of(context).colorScheme.tertiary,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
                     Text(
-                      _formatTo12Hour(localizations, today.maghrib),
-                      style: const TextStyle(
-                        fontFamily: 'Poppins',
-                        fontSize: 20,
+                      statusText,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                        color: theme.colorScheme.onSurface.withOpacity(0.6),
+                      ),
+                    ),
+                    Text(
+                      remainingStr,
+                      style: TextStyle(
+                        fontSize: 14,
                         fontWeight: FontWeight.bold,
-                        color: AppTheme.premiumGold,
+                        color: Theme.of(context).colorScheme.tertiary,
+                        letterSpacing: 0.5,
                       ),
                     ),
                   ],
                 ),
-              ),
+              ],
             ],
           ),
         ),
@@ -1129,7 +1200,9 @@ class DashboardScreen extends ConsumerWidget {
       if (parts.length < 2) return time24;
       final hour = int.parse(parts[0]);
       final minute = int.parse(parts[1]);
-      final period = hour >= 12 ? 'PM' : 'AM';
+      final period = hour >= 12
+          ? localizations.translate('pm')
+          : localizations.translate('am');
       final hour12 = hour % 12 == 0 ? 12 : hour % 12;
       final minuteStr = minute.toString().padLeft(2, '0');
       final formatted = '$hour12:$minuteStr $period';
@@ -1161,74 +1234,123 @@ class DashboardScreen extends ConsumerWidget {
     final bool isZawalActive = forbiddenKey == 'forbidden_zawal';
     final bool isSunsetActive = forbiddenKey == 'forbidden_sunset';
 
-    Widget buildForbiddenColumn(
+    Widget buildForbiddenRow(
       String labelKey,
+      IconData icon,
       DateTime start,
       DateTime end,
       bool isActive,
     ) {
-      final String label = localizations.translate(labelKey).split(' ')[0];
-      return Column(
-        children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-            decoration: isActive
-                ? BoxDecoration(
-                    color: theme.colorScheme.error.withOpacity(0.08),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(
-                      color: theme.colorScheme.error.withOpacity(0.24),
-                      width: 1,
+      final String label = localizations.translate(labelKey);
+      final String startTimeStr = _formatDateTimeTo12Hour(localizations, start);
+      final String endTimeStr = _formatDateTimeTo12Hour(localizations, end);
+
+      return Container(
+        margin: const EdgeInsets.symmetric(vertical: 2.0),
+        padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 8.0),
+        decoration: BoxDecoration(
+          color: isActive
+              ? theme.colorScheme.error.withOpacity(0.08)
+              : theme.cardTheme.color?.withOpacity(0.4) ??
+                    theme.colorScheme.surface.withOpacity(0.4),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color: isActive
+                ? theme.colorScheme.error.withOpacity(0.3)
+                : theme.dividerColor.withOpacity(0.05),
+            width: isActive ? 1.2 : 1.0,
+          ),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              icon,
+              size: 16,
+              color: isActive
+                  ? theme.colorScheme.error
+                  : theme.colorScheme.onSurface.withOpacity(0.55),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Row(
+                children: [
+                  Flexible(
+                    child: Text(
+                      label,
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: isActive
+                            ? FontWeight.bold
+                            : FontWeight.w600,
+                        color: isActive
+                            ? theme.colorScheme.error
+                            : theme.colorScheme.onSurface.withOpacity(0.85),
+                      ),
+                      overflow: TextOverflow.ellipsis,
                     ),
-                  )
-                : null,
-            child: Text(
-              label,
-              style: TextStyle(
-                fontFamily: 'Poppins',
-                fontSize: 11,
-                fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
-                color: isActive
-                    ? theme.colorScheme.error
-                    : theme.colorScheme.onSurface.withOpacity(0.55),
+                  ),
+                  if (isActive) ...[
+                    const SizedBox(width: 6),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 4,
+                        vertical: 1,
+                      ),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.error,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(
+                        localizations.translate('state_active').toUpperCase(),
+                        style: TextStyle(
+                          fontSize: 7,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
               ),
             ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            _formatDateTimeTo12Hour(localizations, start),
-            style: TextStyle(
-              fontFamily: 'Poppins',
-              fontSize: 10,
-              fontWeight: isActive ? FontWeight.bold : FontWeight.w600,
-              color: isActive
-                  ? theme.colorScheme.error
-                  : theme.colorScheme.onSurface.withOpacity(0.7),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  startTimeStr,
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: isActive ? FontWeight.bold : FontWeight.w600,
+                    color: isActive
+                        ? theme.colorScheme.error
+                        : Theme.of(context).colorScheme.tertiary,
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 6.0),
+                  child: Icon(
+                    Icons.arrow_forward_rounded,
+                    size: 10,
+                    color: isActive
+                        ? theme.colorScheme.error.withOpacity(0.5)
+                        : theme.colorScheme.onSurface.withOpacity(0.25),
+                  ),
+                ),
+                Text(
+                  endTimeStr,
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: isActive ? FontWeight.bold : FontWeight.w600,
+                    color: isActive
+                        ? theme.colorScheme.error
+                        : theme.colorScheme.onSurface.withOpacity(0.65),
+                  ),
+                ),
+              ],
             ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 2),
-          Icon(
-            Icons.arrow_downward_rounded,
-            size: 10,
-            color: isActive
-                ? theme.colorScheme.error.withOpacity(0.6)
-                : theme.colorScheme.onSurface.withOpacity(0.3),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            _formatDateTimeTo12Hour(localizations, end),
-            style: TextStyle(
-              fontFamily: 'Poppins',
-              fontSize: 10,
-              fontWeight: isActive ? FontWeight.bold : FontWeight.w600,
-              color: isActive
-                  ? theme.colorScheme.error
-                  : theme.colorScheme.onSurface.withOpacity(0.7),
-            ),
-            textAlign: TextAlign.center,
-          ),
-        ],
+          ],
+        ),
       );
     }
 
@@ -1242,14 +1364,19 @@ class DashboardScreen extends ConsumerWidget {
                 width: 1.5,
               ),
             )
-          : null,
+          : RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+              side: BorderSide(
+                color: theme.dividerColor.withOpacity(0.08),
+                width: 1,
+              ),
+            ),
       color: isForbidden ? theme.colorScheme.error.withOpacity(0.04) : null,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 12.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Header Row: lock clock + status badge
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -1261,14 +1388,13 @@ class DashboardScreen extends ConsumerWidget {
                           : Icons.info_outline_rounded,
                       color: isForbidden
                           ? theme.colorScheme.error
-                          : AppTheme.warmGold,
+                          : Theme.of(context).colorScheme.tertiary,
                       size: 18,
                     ),
                     const SizedBox(width: 8),
                     Text(
                       localizations.translate('special_timings'),
                       style: theme.textTheme.bodyMedium?.copyWith(
-                        fontFamily: 'Poppins',
                         fontWeight: FontWeight.w600,
                         fontSize: 13,
                         color: isForbidden
@@ -1318,7 +1444,6 @@ class DashboardScreen extends ConsumerWidget {
                                   .translate('prayer_allowed')
                                   .toUpperCase(),
                         style: TextStyle(
-                          fontFamily: 'Poppins',
                           fontSize: 9,
                           fontWeight: FontWeight.bold,
                           color: isForbidden
@@ -1332,56 +1457,30 @@ class DashboardScreen extends ConsumerWidget {
               ],
             ),
             const SizedBox(height: 12),
-
-            // Horizontal row grouping all forbidden columns
-            Container(
-              padding: const EdgeInsets.symmetric(vertical: 10),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.error.withOpacity(0.02),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: theme.colorScheme.error.withOpacity(0.06),
-                  width: 1,
+            Column(
+              children: [
+                buildForbiddenRow(
+                  'forbidden_sunrise',
+                  Icons.wb_sunny_outlined,
+                  today.sunriseForbiddenStart,
+                  today.sunriseForbiddenEnd,
+                  isSunriseActive,
                 ),
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: buildForbiddenColumn(
-                      'forbidden_sunrise',
-                      today.sunriseForbiddenStart,
-                      today.sunriseForbiddenEnd,
-                      isSunriseActive,
-                    ),
-                  ),
-                  Container(
-                    height: 24,
-                    width: 0.5,
-                    color: theme.dividerColor.withOpacity(0.12),
-                  ),
-                  Expanded(
-                    child: buildForbiddenColumn(
-                      'forbidden_zawal',
-                      today.zawalForbiddenStart,
-                      today.zawalForbiddenEnd,
-                      isZawalActive,
-                    ),
-                  ),
-                  Container(
-                    height: 24,
-                    width: 0.5,
-                    color: theme.dividerColor.withOpacity(0.12),
-                  ),
-                  Expanded(
-                    child: buildForbiddenColumn(
-                      'forbidden_sunset',
-                      today.sunsetForbiddenStart,
-                      today.sunsetForbiddenEnd,
-                      isSunsetActive,
-                    ),
-                  ),
-                ],
-              ),
+                buildForbiddenRow(
+                  'forbidden_zawal',
+                  Icons.wb_twilight_outlined,
+                  today.zawalForbiddenStart,
+                  today.zawalForbiddenEnd,
+                  isZawalActive,
+                ),
+                buildForbiddenRow(
+                  'forbidden_sunset',
+                  Icons.wb_twilight_outlined,
+                  today.sunsetForbiddenStart,
+                  today.sunsetForbiddenEnd,
+                  isSunsetActive,
+                ),
+              ],
             ),
           ],
         ),
@@ -1392,7 +1491,9 @@ class DashboardScreen extends ConsumerWidget {
   String _formatDateTimeTo12Hour(AppLocalizations localizations, DateTime dt) {
     final hour = dt.hour;
     final minute = dt.minute;
-    final period = hour >= 12 ? 'PM' : 'AM';
+    final period = hour >= 12
+        ? localizations.translate('pm')
+        : localizations.translate('am');
     final hour12 = hour % 12 == 0 ? 12 : hour % 12;
     final minuteStr = minute.toString().padLeft(2, '0');
     return localizations.localizeDigits('$hour12:$minuteStr $period');

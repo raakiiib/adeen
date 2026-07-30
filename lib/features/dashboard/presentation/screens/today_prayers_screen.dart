@@ -20,7 +20,9 @@ class TodayPrayersScreen extends ConsumerWidget {
       if (parts.length < 2) return time24;
       final int hour = int.parse(parts[0]);
       final int minute = int.parse(parts[1]);
-      final period = hour >= 12 ? 'PM' : 'AM';
+      final period = hour >= 12
+          ? localizations.translate('pm')
+          : localizations.translate('am');
       final hour12 = hour % 12 == 0 ? 12 : hour % 12;
       final minuteStr = minute.toString().padLeft(2, '0');
       final formatted = '$hour12:$minuteStr $period';
@@ -38,15 +40,15 @@ class TodayPrayersScreen extends ConsumerWidget {
           backgroundColor: Theme.of(context).cardTheme.color,
           title: Text(
             localizations.translate(titleKey),
-            style: const TextStyle(
-              fontFamily: 'Playfair Display',
+            style: TextStyle(
+              
               fontWeight: FontWeight.bold,
             ),
           ),
           content: Text(
             localizations.translate(bodyKey),
-            style: const TextStyle(
-              fontFamily: 'Poppins',
+            style: TextStyle(
+              
               fontSize: 14,
               height: 1.5,
             ),
@@ -56,7 +58,7 @@ class TodayPrayersScreen extends ConsumerWidget {
               onPressed: () => Navigator.pop(context),
               child: Text(
                 localizations.translate('cancel'),
-                style: const TextStyle(color: AppTheme.warmGold),
+                style: TextStyle(color: Theme.of(context).colorScheme.tertiary),
               ),
             ),
           ],
@@ -77,15 +79,15 @@ class TodayPrayersScreen extends ConsumerWidget {
         title: Text(
           localizations.translate('today_prayers'),
           style: theme.textTheme.titleMedium?.copyWith(
-            fontFamily: 'Playfair Display',
+            
             fontWeight: FontWeight.bold,
             fontSize: 18,
           ),
         ),
       ),
       body: timingsState.isLoading
-          ? const Center(
-              child: CircularProgressIndicator(color: AppTheme.warmGold),
+          ? Center(
+              child: CircularProgressIndicator(color: Theme.of(context).colorScheme.tertiary),
             )
           : today == null
               ? Center(
@@ -117,8 +119,8 @@ class TodayPrayersScreen extends ConsumerWidget {
                               children: [
                                   Text(
                                     localizations.localizeDigits(DateFormat('EEEE, d MMMM yyyy', localizations.locale.languageCode).format(DateTime.now())),
-                                  style: const TextStyle(
-                                    fontFamily: 'Playfair Display',
+                                  style: TextStyle(
+                                    
                                     fontWeight: FontWeight.bold,
                                     fontSize: 17,
                                   ),
@@ -128,7 +130,7 @@ class TodayPrayersScreen extends ConsumerWidget {
                                   Text(
                                     localizations.formatHijriDate(today.hijriDate),
                                     style: TextStyle(
-                                      fontFamily: 'Poppins',
+                                      
                                       fontSize: 12,
                                       color: theme.colorScheme.onSurface.withOpacity(0.55),
                                     ),
@@ -139,12 +141,12 @@ class TodayPrayersScreen extends ConsumerWidget {
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                               decoration: BoxDecoration(
-                                color: AppTheme.premiumGold,
+                                color: Theme.of(context).colorScheme.tertiary,
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: Text(
                                 localizations.translate('state_active').toUpperCase(),
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 9,
                                   fontWeight: FontWeight.bold,
                                   color: Colors.white,
@@ -192,15 +194,15 @@ class TodayPrayersScreen extends ConsumerWidget {
                                 padding: const EdgeInsets.all(10),
                                 decoration: BoxDecoration(
                                   color: theme.brightness == Brightness.dark
-                                      ? AppTheme.warmGold.withOpacity(0.12)
-                                      : theme.colorScheme.primary.withOpacity(0.06),
+                                      ? Theme.of(context).colorScheme.tertiary.withOpacity(0.12)
+                                      : Theme.of(context).colorScheme.primary.withOpacity(0.06),
                                   shape: BoxShape.circle,
                                 ),
                                 child: Icon(
                                   Icons.calendar_month_rounded,
                                   color: theme.brightness == Brightness.dark
-                                      ? AppTheme.warmGold
-                                      : theme.colorScheme.primary,
+                                      ? Theme.of(context).colorScheme.tertiary
+                                      : Theme.of(context).colorScheme.primary,
                                   size: 20,
                                 ),
                               ),
@@ -212,7 +214,7 @@ class TodayPrayersScreen extends ConsumerWidget {
                                     Text(
                                       localizations.translate('view_calendar'),
                                       style: theme.textTheme.titleSmall?.copyWith(
-                                        fontFamily: 'Poppins',
+                                        
                                         fontWeight: FontWeight.bold,
                                         fontSize: 13,
                                       ),
@@ -221,7 +223,7 @@ class TodayPrayersScreen extends ConsumerWidget {
                                     Text(
                                       localizations.translate('calendar_subtitle'),
                                       style: TextStyle(
-                                        fontFamily: 'Poppins',
+                                        
                                         fontSize: 11,
                                         color: theme.colorScheme.onSurface.withOpacity(0.55),
                                       ),
@@ -331,9 +333,9 @@ class _TodayTimetableList extends ConsumerWidget {
         }
 
         final Color textColor = isCurrent
-            ? AppTheme.premiumGold
+            ? Theme.of(context).colorScheme.tertiary
             : (isUpcoming
-                ? theme.colorScheme.primary
+                ? Theme.of(context).colorScheme.primary
                 : theme.colorScheme.onSurface);
 
         final FontWeight textWeight = (isCurrent || isUpcoming) ? FontWeight.bold : FontWeight.w500;
@@ -344,19 +346,19 @@ class _TodayTimetableList extends ConsumerWidget {
           decoration: BoxDecoration(
             color: isCurrent
                 ? (theme.brightness == Brightness.dark
-                    ? theme.colorScheme.primary.withOpacity(0.18)
-                    : theme.colorScheme.primary.withOpacity(0.04))
+                    ? Theme.of(context).colorScheme.primary.withOpacity(0.18)
+                    : Theme.of(context).colorScheme.primary.withOpacity(0.04))
                 : (isUpcoming
                     ? (theme.brightness == Brightness.dark
-                        ? theme.colorScheme.primary.withOpacity(0.10)
-                        : theme.colorScheme.primary.withOpacity(0.02))
+                        ? Theme.of(context).colorScheme.primary.withOpacity(0.10)
+                        : Theme.of(context).colorScheme.primary.withOpacity(0.02))
                     : theme.cardTheme.color ?? theme.colorScheme.surface),
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
               color: isCurrent
-                  ? AppTheme.warmGold
+                  ? Theme.of(context).colorScheme.tertiary
                   : (isUpcoming
-                      ? theme.colorScheme.primary.withOpacity(0.3)
+                      ? Theme.of(context).colorScheme.primary.withOpacity(0.3)
                       : theme.dividerColor.withOpacity(0.08)),
               width: isCurrent ? 1.5 : (isUpcoming ? 1.2 : 1.0),
             ),
@@ -364,74 +366,83 @@ class _TodayTimetableList extends ConsumerWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
-                children: [
-                  Icon(
-                    getPrayerIcon(item.key),
-                    size: 20,
-                    color: isCurrent
-                        ? AppTheme.premiumGold
-                        : (isUpcoming
-                            ? theme.colorScheme.primary
-                            : theme.colorScheme.onSurface.withOpacity(0.55)),
-                  ),
-                  const SizedBox(width: 14),
-                  Text(
-                    localizations.translate((DateTime.now().weekday == DateTime.friday && item.key == 'dhuhr') ? 'jumah_prayer' : item.key),
-                    style: TextStyle(
-                      fontFamily: 'Poppins',
-                      fontSize: 14,
-                      fontWeight: textWeight,
-                      color: textColor,
+              Expanded(
+                child: Row(
+                  children: [
+                    Icon(
+                      getPrayerIcon(item.key),
+                      size: 20,
+                      color: isCurrent
+                          ? Theme.of(context).colorScheme.tertiary
+                          : (isUpcoming
+                              ? Theme.of(context).colorScheme.primary
+                              : theme.colorScheme.onSurface.withOpacity(0.55)),
                     ),
-                  ),
-                  if (isCurrent || isUpcoming) ...[
-                    const SizedBox(width: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: isCurrent ? AppTheme.premiumGold : theme.colorScheme.primary,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(
-                        localizations.translate(isCurrent ? 'state_active' : 'state_upcoming').toUpperCase(),
-                        style: const TextStyle(
-                          fontSize: 8,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Wrap(
+                        spacing: 8.0,
+                        runSpacing: 4.0,
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        children: [
+                          Text(
+                            localizations.translate((DateTime.now().weekday == DateTime.friday && item.key == 'dhuhr') ? 'jumah_prayer' : item.key),
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: textWeight,
+                              color: textColor,
+                            ),
+                          ),
+                          if (isCurrent || isUpcoming)
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: isCurrent ? Theme.of(context).colorScheme.tertiary : Theme.of(context).colorScheme.primary,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Text(
+                                localizations.translate(isCurrent ? 'state_active' : 'state_upcoming').toUpperCase(),
+                                style: const TextStyle(
+                                  fontSize: 8,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          if (item.key == 'ishraq' || item.key == 'chasht_duha' || item.key == 'tahajjud_prayer')
+                            GestureDetector(
+                              onTap: () {
+                                if (item.key == 'ishraq') {
+                                  showHelpDialog('ishraq_info_title', 'ishraq_info_body');
+                                } else if (item.key == 'chasht_duha') {
+                                  showHelpDialog('chasht_info_title', 'chasht_info_body');
+                                } else {
+                                  showHelpDialog('tahajjud_info_title', 'tahajjud_info_body');
+                                }
+                              },
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 2.0),
+                                child: Icon(
+                                  Icons.help_outline_rounded,
+                                  size: 15,
+                                  color: isCurrent
+                                      ? Theme.of(context).colorScheme.tertiary.withOpacity(0.7)
+                                      : theme.colorScheme.onSurface.withOpacity(0.35),
+                                ),
+                              ),
+                            ),
+                        ],
                       ),
                     ),
                   ],
-                  if (item.key == 'ishraq' || item.key == 'chasht_duha' || item.key == 'tahajjud_prayer') ...[
-                    const SizedBox(width: 6),
-                    GestureDetector(
-                      onTap: () {
-                        if (item.key == 'ishraq') {
-                          showHelpDialog('ishraq_info_title', 'ishraq_info_body');
-                        } else if (item.key == 'chasht_duha') {
-                          showHelpDialog('chasht_info_title', 'chasht_info_body');
-                        } else {
-                          showHelpDialog('tahajjud_info_title', 'tahajjud_info_body');
-                        }
-                      },
-                      child: Icon(
-                        Icons.help_outline_rounded,
-                        size: 15,
-                        color: isCurrent
-                            ? AppTheme.premiumGold.withOpacity(0.7)
-                            : theme.colorScheme.onSurface.withOpacity(0.35),
-                      ),
-                    ),
-                  ],
-                ],
+                ),
               ),
+              const SizedBox(width: 8),
               Row(
                 children: [
                   Text(
                     format12Hour(item.startTime),
                     style: TextStyle(
-                      fontFamily: 'Poppins',
                       fontSize: 14,
                       fontWeight: textWeight,
                       color: textColor,
@@ -443,17 +454,16 @@ class _TodayTimetableList extends ConsumerWidget {
                       Icons.arrow_forward_rounded,
                       size: 11,
                       color: isCurrent
-                          ? AppTheme.warmGold
+                          ? Theme.of(context).colorScheme.tertiary
                           : theme.colorScheme.onSurface.withOpacity(0.25),
                     ),
                   ),
                   Text(
                     format12Hour(item.endTime),
                     style: TextStyle(
-                      fontFamily: 'Poppins',
                       fontSize: 12,
                       color: isCurrent
-                          ? AppTheme.premiumGold.withOpacity(0.8)
+                          ? Theme.of(context).colorScheme.tertiary.withOpacity(0.8)
                           : theme.colorScheme.onSurface.withOpacity(0.55),
                     ),
                   ),

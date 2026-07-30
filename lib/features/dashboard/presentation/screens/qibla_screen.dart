@@ -72,7 +72,7 @@ class _QiblaScreenState extends ConsumerState<QiblaScreen>
         isError: true,
         action: TextButton.icon(
           onPressed: () => Geolocator.openAppSettings(),
-          icon: const Icon(Icons.settings_outlined, size: 18),
+          icon: Icon(Icons.settings_outlined, size: 18),
           label: const Text('Open Settings'),
         ),
       );
@@ -84,7 +84,7 @@ class _QiblaScreenState extends ConsumerState<QiblaScreen>
         isError: true,
         action: TextButton.icon(
           onPressed: () => ref.read(locationProvider.notifier).determinePosition(),
-          icon: const Icon(Icons.refresh_rounded, size: 18),
+          icon: Icon(Icons.refresh_rounded, size: 18),
           label: const Text('Retry'),
         ),
       );
@@ -106,16 +106,16 @@ class _QiblaScreenState extends ConsumerState<QiblaScreen>
         title: Text(
           localizations.translate('qibla_finder'),
           style: TextStyle(
-            fontFamily: 'Playfair Display',
+            
             fontWeight: FontWeight.bold,
-            color: isDark ? AppTheme.warmGold : theme.colorScheme.primary,
+            color: isDark ? Theme.of(context).colorScheme.tertiary : Theme.of(context).colorScheme.primary,
           ),
         ),
         centerTitle: true,
         elevation: 0,
         backgroundColor: Colors.transparent,
         iconTheme: IconThemeData(
-          color: isDark ? AppTheme.warmGold : theme.colorScheme.primary,
+          color: isDark ? Theme.of(context).colorScheme.tertiary : Theme.of(context).colorScheme.primary,
         ),
       ),
       body: bodyWidget,
@@ -127,11 +127,11 @@ class _QiblaScreenState extends ConsumerState<QiblaScreen>
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const CircularProgressIndicator(color: AppTheme.warmGold),
+          CircularProgressIndicator(color: Theme.of(context).colorScheme.tertiary),
           const SizedBox(height: 16),
           Text(
             localizations.translate('qibla_searching'),
-            style: const TextStyle(fontFamily: 'Poppins', fontSize: 14),
+            style: TextStyle( fontSize: 14),
           ),
         ],
       ),
@@ -146,7 +146,7 @@ class _QiblaScreenState extends ConsumerState<QiblaScreen>
     Widget? action,
   }) {
     final theme = Theme.of(context);
-    final color = isError ? theme.colorScheme.error : AppTheme.warmGold;
+    final color = isError ? theme.colorScheme.error : Theme.of(context).colorScheme.tertiary;
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
@@ -159,7 +159,7 @@ class _QiblaScreenState extends ConsumerState<QiblaScreen>
               message,
               textAlign: TextAlign.center,
               style: TextStyle(
-                fontFamily: 'Poppins',
+                
                 fontSize: 14,
                 color: color,
               ),
@@ -224,20 +224,20 @@ class _QiblaScreenState extends ConsumerState<QiblaScreen>
                   padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
                   decoration: BoxDecoration(
                     color: isDark
-                        ? AppTheme.warmGold.withOpacity(0.08)
-                        : theme.colorScheme.primary.withOpacity(0.06),
+                        ? Theme.of(context).colorScheme.tertiary.withOpacity(0.08)
+                        : Theme.of(context).colorScheme.primary.withOpacity(0.06),
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
                       color: isDark
-                          ? AppTheme.warmGold.withOpacity(0.18)
-                          : theme.colorScheme.primary.withOpacity(0.12),
+                          ? Theme.of(context).colorScheme.tertiary.withOpacity(0.18)
+                          : Theme.of(context).colorScheme.primary.withOpacity(0.12),
                     ),
                   ),
                   child: Row(
                     children: [
                       Icon(
                         Icons.explore_outlined,
-                        color: isDark ? AppTheme.warmGold : theme.colorScheme.primary,
+                        color: isDark ? Theme.of(context).colorScheme.tertiary : Theme.of(context).colorScheme.primary,
                         size: 22,
                       ),
                       const SizedBox(width: 12),
@@ -248,12 +248,12 @@ class _QiblaScreenState extends ConsumerState<QiblaScreen>
                             Text(
                               localizations.translate('qibla_direction'),
                               style: TextStyle(
-                                fontFamily: 'Poppins',
+                                
                                 fontSize: 11,
                                 fontWeight: FontWeight.w600,
                                 color: isDark
-                                    ? AppTheme.warmGold.withOpacity(0.7)
-                                    : theme.colorScheme.primary.withOpacity(0.7),
+                                    ? Theme.of(context).colorScheme.tertiary.withOpacity(0.7)
+                                    : Theme.of(context).colorScheme.primary.withOpacity(0.7),
                                 letterSpacing: 0.8,
                               ),
                             ),
@@ -263,12 +263,12 @@ class _QiblaScreenState extends ConsumerState<QiblaScreen>
                                 '${qiblaBearing.toStringAsFixed(1)}°',
                               ),
                               style: TextStyle(
-                                fontFamily: 'Playfair Display',
+                                
                                 fontSize: 20,
                                 fontWeight: FontWeight.bold,
                                 color: isDark
-                                    ? AppTheme.warmGold
-                                    : theme.colorScheme.primary,
+                                    ? Theme.of(context).colorScheme.tertiary
+                                    : Theme.of(context).colorScheme.primary,
                               ),
                             ),
                           ],
@@ -302,8 +302,8 @@ class _QiblaScreenState extends ConsumerState<QiblaScreen>
                             ),
                             border: Border.all(
                               color: isDark
-                                  ? AppTheme.warmGold.withOpacity(0.25)
-                                  : theme.colorScheme.primary.withOpacity(0.15),
+                                  ? Theme.of(context).colorScheme.tertiary.withOpacity(0.25)
+                                  : Theme.of(context).colorScheme.primary.withOpacity(0.15),
                               width: 2,
                             ),
                             boxShadow: [
@@ -339,7 +339,7 @@ class _QiblaScreenState extends ConsumerState<QiblaScreen>
                           child: CustomPaint(
                             size: const Size(240, 240),
                             painter: _QiblaNeedlePainter(
-                              goldColor: AppTheme.warmGold,
+                              goldColor: Theme.of(context).colorScheme.tertiary,
                               isDark: isDark,
                             ),
                           ),
@@ -353,10 +353,10 @@ class _QiblaScreenState extends ConsumerState<QiblaScreen>
                             height: 20,
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
-                              color: AppTheme.warmGold,
+                              color: Theme.of(context).colorScheme.tertiary,
                               boxShadow: [
                                 BoxShadow(
-                                  color: AppTheme.warmGold.withOpacity(0.5),
+                                  color: Theme.of(context).colorScheme.tertiary.withOpacity(0.5),
                                   blurRadius: 12,
                                   spreadRadius: 2,
                                 ),
@@ -379,24 +379,24 @@ class _QiblaScreenState extends ConsumerState<QiblaScreen>
                       child: Icon(
                         Icons.mosque_rounded,
                         size: 40,
-                        color: isDark ? AppTheme.warmGold : theme.colorScheme.primary,
+                        color: isDark ? Theme.of(context).colorScheme.tertiary : Theme.of(context).colorScheme.primary,
                       ),
                     ),
                     const SizedBox(height: 8),
                     Text(
                       'الكعبة المشرفة',
                       style: TextStyle(
-                        fontFamily: 'Poppins',
+                        
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
-                        color: isDark ? AppTheme.warmGold : theme.colorScheme.primary,
+                        color: isDark ? Theme.of(context).colorScheme.tertiary : Theme.of(context).colorScheme.primary,
                       ),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       'Makkah al-Mukarramah',
                       style: TextStyle(
-                        fontFamily: 'Poppins',
+                        
                         fontSize: 11,
                         color: theme.colorScheme.onSurface.withOpacity(0.45),
                       ),
@@ -425,7 +425,7 @@ class _QiblaScreenState extends ConsumerState<QiblaScreen>
                         child: Text(
                           'For best accuracy, move your device in a figure-8 pattern to calibrate the compass.',
                           style: TextStyle(
-                            fontFamily: 'Poppins',
+                            
                             fontSize: 11,
                             color: theme.colorScheme.onSurface.withOpacity(0.5),
                           ),
@@ -465,11 +465,11 @@ class _QiblaScreenState extends ConsumerState<QiblaScreen>
             child: Text(
               labels[i],
               style: TextStyle(
-                fontFamily: 'Poppins',
+                
                 fontSize: 12,
                 fontWeight: FontWeight.w700,
                 color: labels[i] == 'N'
-                    ? (isDark ? AppTheme.warmGold : theme.colorScheme.primary)
+                    ? (isDark ? Theme.of(context).colorScheme.tertiary : Theme.of(context).colorScheme.primary)
                     : labelColor,
               ),
             ),

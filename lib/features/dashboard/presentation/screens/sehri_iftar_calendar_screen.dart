@@ -29,8 +29,8 @@ class SehriIftarCalendarScreen extends ConsumerWidget {
       appBar: AppBar(
         title: Text(
           '${localizations.translate('sehri')} & ${localizations.translate('iftar')}',
-          style: const TextStyle(
-            fontFamily: 'Playfair Display',
+          style: TextStyle(
+            
             fontWeight: FontWeight.bold,
             fontSize: 19,
           ),
@@ -58,8 +58,8 @@ class SehriIftarCalendarScreen extends ConsumerWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   IconButton(
-                    icon: const Icon(Icons.chevron_left_rounded),
-                    color: AppTheme.warmGold,
+                    icon: Icon(Icons.chevron_left_rounded),
+                    color: Theme.of(context).colorScheme.tertiary,
                     onPressed: () {
                       int newMonth = state.selectedMonth - 1;
                       int newYear = state.selectedYear;
@@ -72,16 +72,16 @@ class SehriIftarCalendarScreen extends ConsumerWidget {
                   ),
                   Text(
                     titleText,
-                    style: const TextStyle(
-                      fontFamily: 'Playfair Display',
+                    style: TextStyle(
+                      
                       fontWeight: FontWeight.bold,
                       fontSize: 18,
-                      color: AppTheme.premiumGold,
+                      color: Theme.of(context).colorScheme.tertiary,
                     ),
                   ),
                   IconButton(
-                    icon: const Icon(Icons.chevron_right_rounded),
-                    color: AppTheme.warmGold,
+                    icon: Icon(Icons.chevron_right_rounded),
+                    color: Theme.of(context).colorScheme.tertiary,
                     onPressed: () {
                       int newMonth = state.selectedMonth + 1;
                       int newYear = state.selectedYear;
@@ -107,7 +107,7 @@ class SehriIftarCalendarScreen extends ConsumerWidget {
                   child: Text(
                     localizations.translate('tab_date').toUpperCase(),
                     style: TextStyle(
-                      fontFamily: 'Poppins',
+                      
                       fontSize: 10,
                       fontWeight: FontWeight.bold,
                       color: theme.colorScheme.onSurface.withOpacity(0.4),
@@ -120,7 +120,7 @@ class SehriIftarCalendarScreen extends ConsumerWidget {
                     localizations.translate('sehri').toUpperCase(),
                     textAlign: TextAlign.center,
                     style: TextStyle(
-                      fontFamily: 'Poppins',
+                      
                       fontSize: 10,
                       fontWeight: FontWeight.bold,
                       color: theme.colorScheme.onSurface.withOpacity(0.4),
@@ -133,7 +133,7 @@ class SehriIftarCalendarScreen extends ConsumerWidget {
                     localizations.translate('iftar').toUpperCase(),
                     textAlign: TextAlign.center,
                     style: TextStyle(
-                      fontFamily: 'Poppins',
+                      
                       fontSize: 10,
                       fontWeight: FontWeight.bold,
                       color: theme.colorScheme.onSurface.withOpacity(0.4),
@@ -147,8 +147,8 @@ class SehriIftarCalendarScreen extends ConsumerWidget {
           // Body Content (Loading / Error / List)
           Expanded(
             child: state.isLoading
-                ? const Center(
-                    child: CircularProgressIndicator(color: AppTheme.warmGold),
+                ? Center(
+                    child: CircularProgressIndicator(color: Theme.of(context).colorScheme.tertiary),
                   )
                 : state.errorMessage != null
                     ? Center(
@@ -165,7 +165,7 @@ class SehriIftarCalendarScreen extends ConsumerWidget {
                         ? Center(
                             child: Text(
                               localizations.translate('no_timings_found'),
-                              style: const TextStyle(fontFamily: 'Poppins'),
+                              style: TextStyle(),
                             ),
                           )
                         : ListView.builder(
@@ -200,12 +200,12 @@ class SehriIftarCalendarScreen extends ConsumerWidget {
                                 margin: const EdgeInsets.symmetric(vertical: 4.0),
                                 decoration: BoxDecoration(
                                   color: isToday
-                                      ? AppTheme.warmGold.withOpacity(0.08)
+                                      ? Theme.of(context).colorScheme.tertiary.withOpacity(0.08)
                                       : theme.cardColor,
                                   borderRadius: BorderRadius.circular(12),
                                   border: Border.all(
                                     color: isToday
-                                        ? AppTheme.warmGold
+                                        ? Theme.of(context).colorScheme.tertiary
                                         : theme.dividerColor.withOpacity(0.06),
                                     width: isToday ? 1.5 : 1,
                                   ),
@@ -225,17 +225,17 @@ class SehriIftarCalendarScreen extends ConsumerWidget {
                                                 Text(
                                                   localizations.localizeDigits(hijriDayStr),
                                                   style: TextStyle(
-                                                    fontFamily: 'Poppins',
+                                                    
                                                     fontSize: 16,
                                                     fontWeight: FontWeight.bold,
-                                                    color: isToday ? AppTheme.premiumGold : theme.colorScheme.onSurface,
+                                                    color: isToday ? Theme.of(context).colorScheme.tertiary : theme.colorScheme.onSurface,
                                                   ),
                                                 ),
                                                 const SizedBox(width: 4),
                                                 Text(
                                                   monthName,
                                                   style: TextStyle(
-                                                    fontFamily: 'Poppins',
+                                                    
                                                     fontSize: 11,
                                                     color: theme.colorScheme.onSurface.withOpacity(0.4),
                                                   ),
@@ -246,7 +246,7 @@ class SehriIftarCalendarScreen extends ConsumerWidget {
                                             Text(
                                               localizations.localizeDigits(gregDateStr),
                                               style: TextStyle(
-                                                fontFamily: 'Poppins',
+                                                
                                                 fontSize: 11,
                                                 color: theme.colorScheme.onSurface.withOpacity(0.55),
                                               ),
@@ -262,7 +262,7 @@ class SehriIftarCalendarScreen extends ConsumerWidget {
                                           _formatTo12Hour(localizations, item.imsak),
                                           textAlign: TextAlign.center,
                                           style: TextStyle(
-                                            fontFamily: 'Poppins',
+                                            
                                             fontSize: 13,
                                             fontWeight: FontWeight.w600,
                                             color: theme.colorScheme.onSurface,
@@ -277,10 +277,10 @@ class SehriIftarCalendarScreen extends ConsumerWidget {
                                           _formatTo12Hour(localizations, item.maghrib),
                                           textAlign: TextAlign.center,
                                           style: TextStyle(
-                                            fontFamily: 'Poppins',
+                                            
                                             fontSize: 13,
                                             fontWeight: FontWeight.w600,
-                                            color: isToday ? AppTheme.premiumGold : theme.colorScheme.onSurface,
+                                            color: isToday ? Theme.of(context).colorScheme.tertiary : theme.colorScheme.onSurface,
                                           ),
                                         ),
                                       ),
@@ -319,7 +319,9 @@ class SehriIftarCalendarScreen extends ConsumerWidget {
       if (parts.length < 2) return localizations.localizeDigits(time24);
       final int hour = int.parse(parts[0]);
       final int minute = int.parse(parts[1]);
-      final period = hour >= 12 ? 'PM' : 'AM';
+      final period = hour >= 12
+          ? localizations.translate('pm')
+          : localizations.translate('am');
       final hour12 = hour % 12 == 0 ? 12 : hour % 12;
       final minuteStr = minute.toString().padLeft(2, '0');
       final formatted = '$hour12:$minuteStr $period';

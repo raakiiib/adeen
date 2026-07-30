@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "85163213080",
+    "project_id": "adeen-e4675",
+    "storage_bucket": "adeen-e4675.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:85163213080:android:24e5688738b12254cc9e6d",
+        "android_client_info": {
+          "package_name": "com.neucave.adeen"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDc33PBZYMh7mJ6ZGK7saN9Xi9hcCm_UTM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

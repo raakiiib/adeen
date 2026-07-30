@@ -51,7 +51,14 @@ class MosqueListNotifier extends StateNotifier<List<MosqueModel>> {
     const int duration7Days = 7 * 24 * 60 * 60 * 1000;
     const double searchRadius = 10000.0; // 10km search and view radius
 
-    // 1. Evict any cached mosque data older than 30 days (Google API compliance)
+    // 1. Unconditionally clear the entire box if there is any legacy preset mock/dummy data
+    final hasMocks = box.keys.any((key) => key.toString().startsWith('mosque_'));
+    if (hasMocks) {
+      await box.clear();
+      await settingsBox.delete('last_mosque_fetch_metadata');
+    }
+
+    // 2. Evict any cached mosque data older than 30 days (Google API compliance)
     final allKeys = List.from(box.keys);
     for (var key in allKeys) {
       final cached = box.get(key);
@@ -141,18 +148,14 @@ class MosqueListNotifier extends StateNotifier<List<MosqueModel>> {
       }
     }
 
-    // 4. Populate mock templates ONLY if local database is completely empty (no cached real mosques)
-    // This serves as an offline/developer fallback when API is not configured or fails on first run.
-    if (box.isEmpty) {
-      final mocks = _getMockTemplates(lat, lng, _lang == 'ar');
-      for (var mock in mocks) {
-        await box.put(mock.id, mock.toJson());
-      }
-    }
 
-    // 5. Load all cached mosques and filter within 10km radius
+    // 5. Load all cached mosques, filter within 10km radius, and deduplicate overlapping coordinates/names
     final List<MosqueModel> nearby = [];
     final refreshedLocal = box.values.map((v) => MosqueModel.fromJson(v as Map)).toList();
+    
+    final Set<String> seenLocations = {};
+    final Set<String> seenNames = {};
+
     for (var m in refreshedLocal) {
       final double distanceInMeters = Geolocator.distanceBetween(
         lat,
@@ -161,6 +164,17 @@ class MosqueListNotifier extends StateNotifier<List<MosqueModel>> {
         m.longitude,
       );
       if (distanceInMeters <= searchRadius) {
+        // Round coordinates to 5 decimal places (approx 1.1 meters resolution) to detect overlap
+        final String coordKey = '${m.latitude.toStringAsFixed(5)}_${m.longitude.toStringAsFixed(5)}';
+        final String nameKey = m.name.toLowerCase().trim();
+
+        // Prevent exact coordinate overlap or duplicate names in immediate proximity (< 50 meters)
+        if (seenLocations.contains(coordKey) || (seenNames.contains(nameKey) && distanceInMeters < 50.0)) {
+          continue;
+        }
+
+        seenLocations.add(coordKey);
+        seenNames.add(nameKey);
         nearby.add(m);
       }
     }
@@ -168,105 +182,6 @@ class MosqueListNotifier extends StateNotifier<List<MosqueModel>> {
     state = nearby;
   }
 
-  List<MosqueModel> _getMockTemplates(double lat, double lng, bool isAr) {
-    final List<Map<String, dynamic>> templates = [
-      {
-        'id': 'mosque_1',
-        'name': isAr ? 'جامع الروضة الكبير' : 'Al-Rawdah Grand Mosque',
-        'latOffset': 0.005,
-        'lngOffset': 0.006,
-        'hasWomenSection': true,
-        'hasParking': true,
-        'hasJummahShifts': true,
-        'iqamah': {'Fajr': '05:00', 'Dhuhr': '13:15', 'Asr': '16:30', 'Maghrib': '19:15', 'Isha': '20:45'},
-      },
-      {
-        'id': 'mosque_2',
-        'name': isAr ? 'مسجد التوحيد الأثري' : 'Tawheed Landmark Mosque',
-        'latOffset': -0.007,
-        'lngOffset': 0.009,
-        'hasWomenSection': false,
-        'hasParking': true,
-        'hasJummahShifts': false,
-        'iqamah': {'Fajr': '04:55', 'Dhuhr': '13:00', 'Asr': '16:15', 'Maghrib': '19:20', 'Isha': '20:30'},
-      },
-      {
-        'id': 'mosque_3',
-        'name': isAr ? 'مسجد السلام والتقوى' : 'As-Salam Mosque',
-        'latOffset': 0.015,
-        'lngOffset': -0.018,
-        'hasWomenSection': true,
-        'hasParking': false,
-        'hasJummahShifts': true,
-        'iqamah': {'Fajr': '05:05', 'Dhuhr': '13:30', 'Asr': '16:45', 'Maghrib': '19:15', 'Isha': '20:50'},
-      },
-      {
-        'id': 'mosque_4',
-        'name': isAr ? 'مصلى الهدى والرحمة' : 'Al-Huda Musallah',
-        'latOffset': -0.014,
-        'lngOffset': -0.015,
-        'hasWomenSection': false,
-        'hasParking': false,
-        'hasJummahShifts': false,
-        'iqamah': {'Fajr': '04:50', 'Dhuhr': '13:00', 'Asr': '16:00', 'Maghrib': '19:10', 'Isha': '20:30'},
-      },
-      {
-        'id': 'mosque_5',
-        'name': isAr ? 'مسجد الفتح' : 'Al-Fath Mosque',
-        'latOffset': 0.045,
-        'lngOffset': 0.038,
-        'hasWomenSection': true,
-        'hasParking': true,
-        'hasJummahShifts': false,
-        'iqamah': {'Fajr': '05:00', 'Dhuhr': '13:15', 'Asr': '16:20', 'Maghrib': '19:12', 'Isha': '20:40'},
-      },
-      {
-        'id': 'mosque_6',
-        'name': isAr ? 'مسجد النور والهدى' : 'An-Noor Mosque',
-        'latOffset': -0.052,
-        'lngOffset': 0.048,
-        'hasWomenSection': true,
-        'hasParking': true,
-        'hasJummahShifts': true,
-        'iqamah': {'Fajr': '04:55', 'Dhuhr': '13:00', 'Asr': '16:30', 'Maghrib': '19:18', 'Isha': '20:45'},
-      },
-      {
-        'id': 'mosque_7',
-        'name': isAr ? 'مسجد الرحمن' : 'Ar-Rahman Mosque',
-        'latOffset': -0.032,
-        'lngOffset': -0.065,
-        'hasWomenSection': false,
-        'hasParking': true,
-        'hasJummahShifts': true,
-        'iqamah': {'Fajr': '05:10', 'Dhuhr': '13:20', 'Asr': '16:40', 'Maghrib': '19:25', 'Isha': '20:55'},
-      },
-      {
-        'id': 'mosque_8',
-        'name': isAr ? 'مصلى الإيمان' : 'Al-Iman Musallah',
-        'latOffset': 0.068,
-        'lngOffset': -0.035,
-        'hasWomenSection': true,
-        'hasParking': false,
-        'hasJummahShifts': false,
-        'iqamah': {'Fajr': '04:50', 'Dhuhr': '13:00', 'Asr': '16:15', 'Maghrib': '19:10', 'Isha': '20:30'},
-      },
-    ];
-
-    final now = DateTime.now().millisecondsSinceEpoch;
-    return templates.map((temp) {
-      return MosqueModel(
-        id: temp['id'] as String,
-        name: temp['name'] as String,
-        latitude: lat + (temp['latOffset'] as double),
-        longitude: lng + (temp['lngOffset'] as double),
-        hasWomenSection: temp['hasWomenSection'] as bool,
-        hasParking: temp['hasParking'] as bool,
-        hasJummahShifts: temp['hasJummahShifts'] as bool,
-        iqamahTimes: Map<String, String>.from(temp['iqamah'] as Map),
-        fetchedAt: now,
-      );
-    }).toList();
-  }
 
   /// Updates community Iqamah time locally.
   Future<void> updateIqamahTime(String mosqueId, String prayer, String newTime) async {

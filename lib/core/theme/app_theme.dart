@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
   // --- Colors definitions ---
@@ -30,7 +32,7 @@ class AppTheme {
   static ThemeData getTheme(Brightness brightness, String preset) {
     final bool isDark = brightness == Brightness.dark;
     
-    // Choose Colors based on preset & brightness
+    // 1. Choose Colors & Accent (tertiary) based on preset & brightness
     Color primaryColor;
     Color secondaryColor;
     Color backgroundColor;
@@ -38,15 +40,24 @@ class AppTheme {
     Color textPrimary;
     Color textSecondary;
     Color borderCol;
+    Color accentColor;
+
+    // 2. Choose Fonts based on preset
+    String headerFont;
+    String bodyFont;
 
     if (preset == 'sapphire') {
-      primaryColor = isDark ? warmGold : sapphireDeep;
+      primaryColor = isDark ? const Color(0xFF5A9BE6) : sapphireDeep;
       secondaryColor = sapphireRoyal;
       backgroundColor = isDark ? sapphireBgDark : sapphireBgLight;
       cardColor = isDark ? sapphireCardDark : Colors.white;
       textPrimary = isDark ? const Color(0xFFE2E7EB) : const Color(0xFF16222F);
       textSecondary = isDark ? const Color(0xFF909CA6) : const Color(0xFF4C5865);
       borderCol = isDark ? const Color(0xFF172C41) : const Color(0xFFE2E7EB);
+      accentColor = const Color(0xFF8DA9C4);
+
+      headerFont = 'Outfit';
+      bodyFont = 'Inter';
     } else if (preset == 'ruby') {
       primaryColor = isDark ? premiumGold : rubyDeep;
       secondaryColor = rubyAmber;
@@ -55,6 +66,10 @@ class AppTheme {
       textPrimary = isDark ? const Color(0xFFEBE2E2) : const Color(0xFF2F1616);
       textSecondary = isDark ? const Color(0xFFA69090) : const Color(0xFF654C4C);
       borderCol = isDark ? const Color(0xFF411717) : const Color(0xFFEBE2E2);
+      accentColor = premiumGold;
+
+      headerFont = 'Lora';
+      bodyFont = 'Georgia';
     } else {
       // Default: Emerald
       primaryColor = isDark ? warmGold : emeraldDeep;
@@ -64,7 +79,70 @@ class AppTheme {
       textPrimary = isDark ? const Color(0xFFE2EBE5) : const Color(0xFF1C2D24);
       textSecondary = isDark ? const Color(0xFF90A397) : const Color(0xFF556B5F);
       borderCol = isDark ? const Color(0xFF1E3A2B) : const Color(0xFFE5EDE8);
+      accentColor = warmGold;
+
+      headerFont = 'Playfair Display';
+      bodyFont = 'Poppins';
     }
+
+    // Dynamic Google Fonts resolver helper
+    TextTheme resolveGoogleTextTheme(String fontName, TextTheme baseTheme) {
+      switch (fontName) {
+        case 'Poppins':
+          return GoogleFonts.poppinsTextTheme(baseTheme);
+        case 'Inter':
+          return GoogleFonts.interTextTheme(baseTheme);
+        case 'Outfit':
+          return GoogleFonts.outfitTextTheme(baseTheme);
+        case 'Playfair Display':
+          return GoogleFonts.playfairDisplayTextTheme(baseTheme);
+        case 'Lora':
+          return GoogleFonts.loraTextTheme(baseTheme);
+        default:
+          // For system default serif fallbacks like Georgia, fall back cleanly
+          return baseTheme;
+      }
+    }
+
+    final baseTextTheme = ThemeData(brightness: brightness).textTheme;
+    final bodyTextTheme = resolveGoogleTextTheme(bodyFont, baseTextTheme);
+    final headerTextTheme = resolveGoogleTextTheme(headerFont, baseTextTheme);
+
+    final TextTheme textTheme = TextTheme(
+      displayLarge: headerTextTheme.displayLarge?.copyWith(color: textPrimary, fontWeight: FontWeight.bold, fontFamily: headerFont) ??
+          TextStyle(fontFamily: headerFont, color: textPrimary, fontWeight: FontWeight.bold),
+      displayMedium: headerTextTheme.displayMedium?.copyWith(color: textPrimary, fontWeight: FontWeight.bold, fontFamily: headerFont) ??
+          TextStyle(fontFamily: headerFont, color: textPrimary, fontWeight: FontWeight.bold),
+      displaySmall: headerTextTheme.displaySmall?.copyWith(color: textPrimary, fontWeight: FontWeight.bold, fontFamily: headerFont) ??
+          TextStyle(fontFamily: headerFont, color: textPrimary, fontWeight: FontWeight.bold),
+      headlineLarge: headerTextTheme.headlineLarge?.copyWith(color: textPrimary, fontWeight: FontWeight.bold, fontFamily: headerFont) ??
+          TextStyle(fontFamily: headerFont, color: textPrimary, fontWeight: FontWeight.bold),
+      headlineMedium: headerTextTheme.headlineMedium?.copyWith(color: textPrimary, fontWeight: FontWeight.bold, fontFamily: headerFont) ??
+          TextStyle(fontFamily: headerFont, color: textPrimary, fontWeight: FontWeight.bold),
+      headlineSmall: headerTextTheme.headlineSmall?.copyWith(color: textPrimary, fontWeight: FontWeight.bold, fontFamily: headerFont) ??
+          TextStyle(fontFamily: headerFont, color: textPrimary, fontWeight: FontWeight.bold),
+      
+      titleLarge: bodyTextTheme.titleLarge?.copyWith(color: textPrimary, fontWeight: FontWeight.w600, fontSize: 18, fontFamily: bodyFont) ??
+          TextStyle(fontFamily: bodyFont, color: textPrimary, fontWeight: FontWeight.w600, fontSize: 18),
+      titleMedium: bodyTextTheme.titleMedium?.copyWith(color: textPrimary, fontWeight: FontWeight.w500, fontSize: 16, fontFamily: bodyFont) ??
+          TextStyle(fontFamily: bodyFont, color: textPrimary, fontWeight: FontWeight.w500, fontSize: 16),
+      titleSmall: bodyTextTheme.titleSmall?.copyWith(color: textPrimary, fontWeight: FontWeight.w500, fontSize: 14, fontFamily: bodyFont) ??
+          TextStyle(fontFamily: bodyFont, color: textPrimary, fontWeight: FontWeight.w500, fontSize: 14),
+      
+      bodyLarge: bodyTextTheme.bodyLarge?.copyWith(color: textPrimary, fontSize: 15, fontFamily: bodyFont) ??
+          TextStyle(fontFamily: bodyFont, color: textPrimary, fontSize: 15),
+      bodyMedium: bodyTextTheme.bodyMedium?.copyWith(color: textSecondary, fontSize: 14, fontFamily: bodyFont) ??
+          TextStyle(fontFamily: bodyFont, color: textSecondary, fontSize: 14),
+      bodySmall: bodyTextTheme.bodySmall?.copyWith(color: textSecondary, fontSize: 12, fontFamily: bodyFont) ??
+          TextStyle(fontFamily: bodyFont, color: textSecondary, fontSize: 12),
+      
+      labelLarge: bodyTextTheme.labelLarge?.copyWith(color: primaryColor, fontWeight: FontWeight.bold, fontFamily: bodyFont) ??
+          TextStyle(fontFamily: bodyFont, color: primaryColor, fontWeight: FontWeight.bold),
+      labelMedium: bodyTextTheme.labelMedium?.copyWith(color: primaryColor, fontFamily: bodyFont) ??
+          TextStyle(fontFamily: bodyFont, color: primaryColor),
+      labelSmall: bodyTextTheme.labelSmall?.copyWith(color: primaryColor, fontFamily: bodyFont) ??
+          TextStyle(fontFamily: bodyFont, color: primaryColor),
+    );
 
     return ThemeData(
       useMaterial3: true,
@@ -84,7 +162,7 @@ class AppTheme {
         onBackground: textPrimary,
         surface: cardColor,
         onSurface: textPrimary,
-        tertiary: warmGold,
+        tertiary: accentColor,
       ),
       cardTheme: CardThemeData(
         color: cardColor,
@@ -100,34 +178,32 @@ class AppTheme {
         elevation: 0,
         centerTitle: true,
         iconTheme: IconThemeData(color: primaryColor),
+        systemOverlayStyle: SystemUiOverlayStyle(
+          statusBarColor: Colors.transparent,
+          statusBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
+          statusBarBrightness: isDark ? Brightness.dark : Brightness.light,
+        ),
         titleTextStyle: TextStyle(
           color: primaryColor,
           fontSize: 20,
           fontWeight: FontWeight.bold,
-          fontFamily: 'Playfair Display',
+          fontFamily: headerFont,
         ),
       ),
-      textTheme: TextTheme(
-        displayLarge: TextStyle(fontFamily: 'Playfair Display', color: textPrimary, fontWeight: FontWeight.bold),
-        titleLarge: TextStyle(fontFamily: 'Poppins', color: textPrimary, fontWeight: FontWeight.w600, fontSize: 18),
-        titleMedium: TextStyle(fontFamily: 'Poppins', color: textPrimary, fontWeight: FontWeight.w500, fontSize: 16),
-        bodyLarge: TextStyle(fontFamily: 'Poppins', color: textPrimary, fontSize: 15),
-        bodyMedium: TextStyle(fontFamily: 'Poppins', color: textSecondary, fontSize: 14),
-        labelLarge: TextStyle(fontFamily: 'Poppins', color: primaryColor, fontWeight: FontWeight.bold),
-      ),
+      textTheme: textTheme,
       bottomNavigationBarTheme: BottomNavigationBarThemeData(
         backgroundColor: cardColor,
         selectedItemColor: primaryColor,
         unselectedItemColor: textSecondary,
-        selectedLabelStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 12),
-        unselectedLabelStyle: const TextStyle(fontSize: 12),
+        selectedLabelStyle: TextStyle(fontFamily: bodyFont, fontWeight: FontWeight.w600, fontSize: 12),
+        unselectedLabelStyle: TextStyle(fontFamily: bodyFont, fontSize: 12),
       ),
       chipTheme: ChipThemeData(
         backgroundColor: isDark ? backgroundColor : Colors.white,
         selectedColor: primaryColor,
         disabledColor: isDark ? Colors.grey.shade800 : Colors.grey.shade200,
-        labelStyle: TextStyle(color: textPrimary, fontSize: 13, fontFamily: 'Poppins'),
-        secondaryLabelStyle: TextStyle(color: isDark ? const Color(0xFF0F1E15) : Colors.white, fontSize: 13, fontFamily: 'Poppins'),
+        labelStyle: TextStyle(color: textPrimary, fontSize: 13, fontFamily: bodyFont),
+        secondaryLabelStyle: TextStyle(color: isDark ? const Color(0xFF0F1E15) : Colors.white, fontSize: 13, fontFamily: bodyFont),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       ),

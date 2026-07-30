@@ -239,7 +239,42 @@ class _MosqueMapScreenState extends ConsumerState<MosqueMapScreen> {
                       ),
                       const SizedBox(width: 8),
                       Expanded(
-                        child: _buildFilterChipsRow(ref, activeFilter, localizations, theme),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                          decoration: BoxDecoration(
+                            color: theme.cardTheme.color?.withOpacity(0.95) ?? Colors.white.withOpacity(0.95),
+                            borderRadius: BorderRadius.circular(24),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.06),
+                                blurRadius: 8,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.info_outline_rounded,
+                                size: 16,
+                                color: theme.colorScheme.primary,
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  localizations.translate('mosque_data_disclaimer'),
+                                  style: TextStyle(
+                                    fontFamily: 'Poppins',
+                                    fontSize: 9.5,
+                                    fontWeight: FontWeight.w500,
+                                    color: theme.colorScheme.onSurface.withOpacity(0.7),
+                                    height: 1.2,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
                     ],
                   ),
